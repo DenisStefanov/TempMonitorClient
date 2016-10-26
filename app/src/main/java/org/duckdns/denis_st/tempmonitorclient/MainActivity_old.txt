@@ -1,0 +1,295 @@
+package com.brew.tempmon;
+
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.TimerTask;
+
+import chart.PointOnChart;
+import linechart.LineChartAttributes;
+import linechart.LineChartView;
+import linechart.PathAttributes;
+import linechart.PathOnChart;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.RectF;
+import android.os.Bundle;
+import android.os.PowerManager;
+
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.View;
+
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Timer;
+
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
+
+
+public class MainActivity extends Activity {
+	private LineChartAttributes lineChartAttributes = new LineChartAttributes();
+	private int chartToShow = 12;
+	private List<String> dataList = null;
+	private GcmRegistrar tmgcm;
+	private GcmIntentService tmgis;
+	private PowerManager.WakeLock wakeLock;
+
+	@Override
+	public void onStop(){
+		super.onStop();
+	}
+
+	private class GCMRegister extends TimerTask {
+		@Override
+		public void run() {
+			String regid = null;
+			System.out.println("Registering with GCM...");
+			regid = tmgcm.register();
+			if (!regid.isEmpty()) {
+				System.out.println("Got GCM reg id. [" + regid + "]");
+				UpdateRegIDOnServer("raspberrypi", regid);
+				this.cancel();
+			}
+		}
+	}
+
+
+	private static String UpdateRegIDOnServer(String host, String RegID){
+		String result = null;
+		try{
+			JSch jsch=new JSch();
+
+			InetAddress address = InetAddress.getByName(host);
+			System.out.println(address.getHostAddress());
+
+			Session session=jsch.getSession("pi", address.getHostAddress(), 22);
+			session.setPassword("raspberry");
+
+			session.setConfig("StrictHostKeyChecking", "no");
+
+			session.connect(5000); // making a connection with timeout.
+
+			Channel channel=session.openChannel("exec");
+
+			InputStream in=channel.getInputStream();
+			//((ChannelExec)channel).setErrStream(System.err);
+
+			((ChannelExec)channel).setCommand("echo " + RegID + " > /tmp/regid.txt");
+
+			channel.connect(5000);
+
+			byte[] tmp=new byte[1024];
+			while(true) {
+				int i=in.read(tmp, 0, 1024);
+				if(i<0)break;
+				System.out.print(result = result + new String(tmp, 0, i));
+			}
+			Thread.sleep(500);
+			System.out.println("exit-status: "+channel.getExitStatus());
+			channel.disconnect();
+			session.disconnect();
+
+		}
+		catch(Exception e){
+			System.out.println(e);
+		}
+		return result;
+	}
+
+
+	/** Called when the activity is first created. */
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+
+        //this.requestWindowFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+
+        //Toolbar myToolbar = (Toolbar) findViewById(R.id.settings);
+        //setSupportActionBar(myToolbar);
+
+        tmgis = new GcmIntentService();
+
+		PowerManager pm;
+		pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+		wakeLock = pm.newWakeLock(pm.SCREEN_BRIGHT_WAKE_LOCK, "My wakelock");
+
+		tmgcm = new GcmRegistrar(getApplicationContext());
+		Timer timer = new Timer();
+
+		View v = getWindow().getDecorView().findViewById(android.R.id.content);
+
+		// Check device for Play Services APK.
+		if (tmgcm.checkPlayServices(this)) {
+			timer.scheduleAtFixedRate(new GCMRegister(), 0, 1000);
+		} else {
+			System.out.println("No valid Google Play Services APK found.");
+		}
+
+		requestForData();
+		updateChart();
+
+		v.setOnTouchListener(new View.OnTouchListener() {
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				if (event.getAction() == MotionEvent.ACTION_UP){
+					//System.out.println("Touch coordinates : " +  String.valueOf(event.getX()) + "x" + String.valueOf(event.getY()));
+					if (coordsIn(lineChartAttributes.Btn1, event.getX(), event.getY())) {
+						chartToShow = 1;
+						updateChart();
+					} else if (coordsIn(lineChartAttributes.Btn2, event.getX(), event.getY())){
+						chartToShow = 2;
+						updateChart();
+					} else if (coordsIn(lineChartAttributes.Btn12, event.getX(), event.getY())) {
+						chartToShow = 12;
+						updateChart();
+					}
+					else {
+						requestForData();
+						updateChart();
+					}
+				}
+				return true;
+			}
+		});
+	}
+
+	private void requestForData(){
+		try {
+
+			Context ctx = getBaseContext();
+			Intent stopIntent = new Intent(ctx, RingtonePlayingService.class);
+			ctx.stopService(stopIntent);
+
+			dataList = tmgis.getData();
+			if (dataList == null){
+				dataList = new ArrayList<String>(Arrays.asList("Mon Jan 01 00:00:00 2000,00.00,00.00"));
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	protected void onResume() {
+		if (tmgcm.checkPlayServices(this)) {
+		}
+		wakeLock.acquire();
+		super.onResume();
+	}
+
+	@Override
+	protected void onPause() {
+		wakeLock.release();
+		super.onPause();
+	}
+
+	private boolean coordsIn(RectF rec, float x, float y) {
+		//System.out.println(x + "=" + y + "=" + " " + rec.left + " " + rec.right + " " + rec.bottom + " " + rec.top);
+		if ((x > rec.left) && (x < rec.right) && (y < rec.bottom) && (y > rec.top)) return true;
+		return false;
+	}
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.settings, menu);
+		return true;
+	}
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle item selection
+		switch (item.getItemId()) {
+			case R.id.ServerIP:
+				//Start?
+				return true;
+			case R.id.help:
+				//TBD
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
+		}
+	}
+	private void updateChart() {
+		ArrayList<PointOnChart> points1 = new ArrayList<PointOnChart>();
+		ArrayList<PointOnChart> points2 = new ArrayList<PointOnChart>();
+		float Y1 = 0, Y2 = 0;
+		long X = 0;
+		String[] rec = null;
+		long zeroX = 0, zeroY1 = 0, zeroY2 = 0;
+
+		if (dataList == null) return;
+		List<String> str = dataList; //.subList(dataList.size() >= 100? dataList.size()-100 : 0, dataList.size()); // display last 100 records
+		for (String temp : str) {
+			try {
+				rec = temp.split(",");
+				SimpleDateFormat dateFormat = new SimpleDateFormat("E MMM dd HH:mm:ss yyyy", Locale.ENGLISH);
+				Date d = dateFormat.parse(rec[0]);
+				X = d.getTime() / 1000 ;
+
+				Y1 = Float.valueOf(rec[1]);
+				Y2 = Float.valueOf(rec[2]);
+
+				if (zeroX == 0 && zeroY1 == 0 && zeroY2 == 0) { zeroX = X; zeroY1 = (long)Y1; zeroY2 = (long)Y2;}
+				X = (X - zeroX);
+
+				switch (chartToShow) {
+				case 1:
+					Y1 = (Y1 - zeroY1)*3;
+					points1.add(new PointOnChart(X, Y1));
+					break;
+				case 2:
+					Y2 = (Y2 - zeroY2)*3;
+					points2.add(new PointOnChart(X, Y2));
+					break;
+				case 12:
+					points1.add(new PointOnChart(X, Y1));
+					points2.add(new PointOnChart(X, Y2));
+					break;
+				}
+
+				//System.out.println("( X : "+ X + ", Y1 : "+ Y1 + " Y2 : " + Y2 +" )");
+			} catch(Exception e){ return; }
+		}
+
+		PathAttributes pathAttributes1 = new PathAttributes();
+		pathAttributes1.setPointColor("#00AAAAAA");
+		pathAttributes1.setPathColor("#FFAF00");
+		PathOnChart path1 = new PathOnChart(points1, pathAttributes1);
+
+		PathAttributes pathAttributes2 = new PathAttributes();
+		pathAttributes2.setPointColor("#00AAAA00");
+		pathAttributes2.setPathColor("#FFFF00");
+		PathOnChart path2 = new PathOnChart(points2, pathAttributes2);
+
+		ArrayList<PathOnChart> paths = new ArrayList<PathOnChart>();
+
+		if (chartToShow == 1 || chartToShow == 12) paths.add(path1);
+		if (chartToShow == 2 || chartToShow == 12) paths.add(path2);
+
+		if (chartToShow == 1) lineChartAttributes.temperatureLabel = rec[1];
+		if (chartToShow == 2) lineChartAttributes.temperatureLabel = "            " + rec[2];
+		if (chartToShow == 12) lineChartAttributes.temperatureLabel = rec[1] + "        " + rec[2];
+
+		lineChartAttributes.setBackgroundColor("#aaabbb");
+		lineChartAttributes.setGridVisible(false);
+
+		lineChartAttributes.timeLabel = rec[0].replaceAll("\\s+", " ").split(" ")[3];
+		//setContentView(new LineChartView(this, paths, lineChartAttributes));
+	}
+
+}
