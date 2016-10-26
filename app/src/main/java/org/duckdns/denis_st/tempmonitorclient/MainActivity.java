@@ -47,7 +47,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             };
 
-    private String UpdateRegIDOnServer(String RegID){
+    private void showToastinMain(final String text) {
+        MainActivity.this.runOnUiThread(new Runnable() {
+            public void run() {
+                Toast.makeText(MainActivity.this, text, Toast.LENGTH_LONG).show();}
+        });
+
+    }
+    private String PerformServerCommand(String command){
         String result = null;
         try{
             JSch jsch=new JSch();
@@ -64,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
             InputStream in=channel.getInputStream();
             //((ChannelExec)channel).setErrStream(System.err);
 
-            ((ChannelExec)channel).setCommand("echo " + RegID + " > /tmp/regid.txt");
+            ((ChannelExec)channel).setCommand(command);
 
             channel.connect(5000);
 
@@ -74,7 +81,11 @@ public class MainActivity extends AppCompatActivity {
                 if(i<0)break;
                 result = result + new String(tmp, 0, i);
             }
-            System.out.println("exit-status: "+channel.getExitStatus());
+
+            showToastinMain(result);
+
+            System.out.println("host response: " + result);
+            System.out.println("exit-status: " + channel.getExitStatus());
             Thread.sleep(500);
             channel.disconnect();
             session.disconnect();
@@ -82,16 +93,7 @@ public class MainActivity extends AppCompatActivity {
         }
         catch(Exception e){
             System.out.println(e);
-            result=null;
-        }
-        if (result==null) {
-            MainActivity.this.runOnUiThread(new Runnable() {
-                public void run() {
-                    Toast.makeText(MainActivity.this,
-                            "Could not send RegID to server. the app won't work properly",
-                            Toast.LENGTH_LONG).show();
-                }
-            });
+            showToastinMain(e.toString());
         }
         return result;
     }
@@ -127,8 +129,6 @@ public class MainActivity extends AppCompatActivity {
         wakeLock = pm.newWakeLock(pm.SCREEN_BRIGHT_WAKE_LOCK, "My wakelock");
 
         tmgcm = new GcmRegistrar(getApplicationContext());
-        Timer timer = new Timer();
-
         // Check device for Play Services APK.
         if (tmgcm.checkPlayServices(this)) {
             new Thread() {
@@ -139,13 +139,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         View v = getWindow().getDecorView().findViewById(android.R.id.content);
-
         v.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_UP){
-                        requestForData();
-                }
+                if (event.getAction() == MotionEvent.ACTION_UP){requestForData();}
                 return true;
             }
         });
@@ -200,7 +197,6 @@ public class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
@@ -209,9 +205,22 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id. action_updRegID) {
             new Thread() {
                 @Override
-                public void run() {UpdateRegIDOnServer(regid);}}.start();
+                public void run() {PerformServerCommand("echo " + regid + " > /tmp/regid.txt");}}.start();
             return true;
         }
+        if (id == R.id. action_startSrv) {
+            new Thread() {
+                @Override
+                public void run() {PerformServerCommand("service tempmon start ");}}.start();
+            return true;
+        }
+        if (id == R.id. action_stopSrv) {
+            new Thread() {
+                @Override
+                public void run() {PerformServerCommand("service tempmon stop");}}.start();
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 }

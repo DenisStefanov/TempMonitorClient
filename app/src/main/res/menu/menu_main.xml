@@ -12,4 +12,14 @@
         android:orderInCategory="100"
         android:title="@string/action_updRegID"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_startSrv"
+        android:orderInCategory="100"
+        android:title="@string/action_startSrv"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_stopSrv"
+        android:orderInCategory="100"
+        android:title="@string/action_stopSrv"
+        app:showAsAction="never" />
 </menu>
