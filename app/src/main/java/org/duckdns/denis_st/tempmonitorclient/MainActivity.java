@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.PowerManager;
-import android.preference.Preference;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MotionEvent;
@@ -21,12 +20,9 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
     private GcmRegistrar tmgcm;
@@ -38,14 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private String passwd;
     private SharedPreferences.OnSharedPreferenceChangeListener prefListener;
     private String regid = null;
-
-    private void GCMRegister() {
-            System.out.println("Registering with GCM...");
-            regid = tmgcm.register();
-            if (!regid.isEmpty()) {
-                System.out.println("Got GCM reg id. [" + regid + "]");
-                }
-            };
+    private String startSrvCmd, stopSrvCmd, RegIDSrvFile, getLogCmd;
 
     private void showToastinMain(final String text) {
         MainActivity.this.runOnUiThread(new Runnable() {
@@ -54,13 +43,13 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
-    private String PerformServerCommand(String command){
+    private String PerformServerCommand(String command, String host, String user, String pwd){
         String result = null;
         try{
             JSch jsch=new JSch();
 
-            Session session=jsch.getSession(user, ServerIP, 22);
-            session.setPassword(passwd);
+            Session session=jsch.getSession(user, host, 22);
+            session.setPassword(pwd);
 
             session.setConfig("StrictHostKeyChecking", "no");
 
@@ -82,14 +71,13 @@ public class MainActivity extends AppCompatActivity {
                 result = result + new String(tmp, 0, i);
             }
 
-            showToastinMain(result);
+            showToastinMain(result + " Ok");
 
             System.out.println("host response: " + result);
             System.out.println("exit-status: " + channel.getExitStatus());
             Thread.sleep(500);
             channel.disconnect();
             session.disconnect();
-            result = "Ok";
         }
         catch(Exception e){
             System.out.println(e);
@@ -97,6 +85,14 @@ public class MainActivity extends AppCompatActivity {
         }
         return result;
     }
+    private void GCMRegister() {
+            System.out.println("Registering with GCM...");
+            regid = tmgcm.register();
+            if (!regid.isEmpty()) {
+                System.out.println("Got GCM reg id. [" + regid + "]");
+                }
+            };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,6 +112,10 @@ public class MainActivity extends AppCompatActivity {
         ServerIP = prefs.getString("ServerIP", null);
         user = prefs.getString("user", null);
         passwd = prefs.getString("passwd", null);
+        startSrvCmd = prefs.getString("startSrvCmd", null);
+        stopSrvCmd = prefs.getString("stopSrvCmd", null);
+        RegIDSrvFile = prefs.getString("RegIDSrvFile", null);
+        getLogCmd = prefs.getString("getLogCmd", null);
         System.out.println("Got Server IP from shared prefs. [" + ServerIP + "]");
 
         setContentView(R.layout.activity_main);
@@ -205,19 +205,28 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id. action_updRegID) {
             new Thread() {
                 @Override
-                public void run() {PerformServerCommand("echo " + regid + " > /tmp/regid.txt");}}.start();
+                public void run() {PerformServerCommand("echo " + regid + " > " + RegIDSrvFile, ServerIP, user, passwd);}}.start();
             return true;
         }
         if (id == R.id. action_startSrv) {
             new Thread() {
                 @Override
-                public void run() {PerformServerCommand("service tempmon start ");}}.start();
+                public void run() {PerformServerCommand(startSrvCmd, ServerIP, user, passwd);}}.start();
             return true;
         }
         if (id == R.id. action_stopSrv) {
             new Thread() {
                 @Override
-                public void run() {PerformServerCommand("service tempmon stop");}}.start();
+                public void run() {PerformServerCommand(stopSrvCmd, ServerIP, user, passwd);}}.start();
+            return true;
+        }
+        if (id == R.id. action_showSrvLog) {
+
+            String SrvLog = PerformServerCommand(getLogCmd, ServerIP, user, passwd);
+
+            Intent intent = new Intent(this, ServerLogActivity.class);
+            intent.putExtra("SERVER_LOG_DATA", SrvLog);
+            startActivity(intent);
             return true;
         }
 

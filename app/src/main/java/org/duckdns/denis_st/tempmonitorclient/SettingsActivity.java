@@ -193,6 +193,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             bindPreferenceSummaryToValue(findPreference("ServerIP"));
             bindPreferenceSummaryToValue(findPreference("user"));
             bindPreferenceSummaryToValue(findPreference("passwd"));
+            bindPreferenceSummaryToValue(findPreference("startSrvCmd"));
+            bindPreferenceSummaryToValue(findPreference("stopSrvCmd"));
+            bindPreferenceSummaryToValue(findPreference("getLogCmd"));
+            bindPreferenceSummaryToValue(findPreference("RegIDSrvFile"));
             bindPreferenceSummaryToValue(findPreference("example_list"));
         }
 
