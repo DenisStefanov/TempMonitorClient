@@ -13,9 +13,10 @@ public class ServerLogActivity extends AppCompatActivity {
         String receivedStr;
         Bundle extras = getIntent().getExtras();
         receivedStr = extras.getString("SERVER_LOG_DATA");
-
-        TextView logView = (TextView)findViewById(R.id.textView2);
-        logView.setText(receivedStr);
+        if (receivedStr != null){
+            TextView logView = (TextView) findViewById(R.id.textView2);
+            logView.setText(receivedStr);
+        }
         setContentView(R.layout.activity_server_log);
     }
 
