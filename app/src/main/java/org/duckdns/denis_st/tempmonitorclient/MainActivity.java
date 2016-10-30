@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.preference.PreferenceManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.jcraft.jsch.Channel;
@@ -20,15 +21,18 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private GcmRegistrar tmgcm;
     private GcmIntentService tmgis;
     private PowerManager.WakeLock wakeLock;
-    private List<String> dataList = null;
+    private String Srvdata = null;
     private String ServerIP;
     private String user;
     private String passwd;
@@ -43,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
-    private String PerformServerCommand(String command, String host, String user, String pwd){
+    private void PerformServerCommand(String command, String host, String user, String pwd){
         String result = null;
         try{
             JSch jsch=new JSch();
@@ -83,7 +87,13 @@ public class MainActivity extends AppCompatActivity {
             System.out.println(e);
             showToastinMain(e.toString());
         }
-        return result;
+
+        if (command.equals(getLogCmd)) {
+            Intent intent = new Intent(this, ServerLogActivity.class);
+            intent.putExtra("SERVER_LOG_DATA", result);
+            startActivity(intent);
+        }
+        return;
     }
     private void GCMRegister() {
             System.out.println("Registering with GCM...");
@@ -98,13 +108,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
+        PreferenceManager.setDefaultValues(this, R.xml.pref_notification, false);
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         prefListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
                     ServerIP = prefs.getString("ServerIP", null);
                     user = prefs.getString("user", null);
                     passwd = prefs.getString("passwd", null);
-                    System.out.println("Got Server IP from shared prefs. [" + ServerIP + "]");
             }
         };
         prefs.registerOnSharedPreferenceChangeListener(prefListener);
@@ -116,7 +128,6 @@ public class MainActivity extends AppCompatActivity {
         stopSrvCmd = prefs.getString("stopSrvCmd", null);
         RegIDSrvFile = prefs.getString("RegIDSrvFile", null);
         getLogCmd = prefs.getString("getLogCmd", null);
-        System.out.println("Got Server IP from shared prefs. [" + ServerIP + "]");
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -156,9 +167,23 @@ public class MainActivity extends AppCompatActivity {
             Intent stopIntent = new Intent(ctx, RingtonePlayingService.class);
             ctx.stopService(stopIntent);
 
-            dataList = tmgis.getData();
-            if (dataList == null){
-                dataList = new ArrayList<String>(Arrays.asList("Mon Jan 01 00:00:00 2000,00.00,00.00"));
+            Srvdata = tmgis.getData();
+            if (Srvdata != null){
+                TextView LastUpd = (TextView)findViewById(R.id.lastupdate);
+                LastUpd.setText(Srvdata.split(",")[0]);
+                TextView TowerTemp = (TextView)findViewById(R.id.tempTowerVal);
+                TowerTemp.setText(Srvdata.split(",")[1]);
+                TextView StillTemp = (TextView)findViewById(R.id.tempStillVal);
+                StillTemp.setText(Srvdata.split(",")[2]);
+
+                //Sun Oct 30 17:16:14
+                Date d1 = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(Srvdata.split(",")[0]);
+                Date d2 = Calendar.getInstance().getTime();
+                long diffSec = Math.abs(d1.getTime() - d2.getTime()) / 1000;
+                long diffMin = diffSec/60;
+                TextView timeago = (TextView)findViewById(R.id.timeago);
+                timeago.setText(String.valueOf(diffMin) + ":" + String.valueOf(diffSec));
+
             }
         }catch (Exception e) {
             e.printStackTrace();
@@ -202,31 +227,29 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             return true;
         }
-        if (id == R.id. action_updRegID) {
+        if (id == R.id.action_updRegID) {
             new Thread() {
                 @Override
                 public void run() {PerformServerCommand("echo " + regid + " > " + RegIDSrvFile, ServerIP, user, passwd);}}.start();
             return true;
         }
-        if (id == R.id. action_startSrv) {
+        if (id == R.id.action_startSrv) {
             new Thread() {
                 @Override
                 public void run() {PerformServerCommand(startSrvCmd, ServerIP, user, passwd);}}.start();
             return true;
         }
-        if (id == R.id. action_stopSrv) {
+        if (id == R.id.action_stopSrv) {
             new Thread() {
                 @Override
                 public void run() {PerformServerCommand(stopSrvCmd, ServerIP, user, passwd);}}.start();
             return true;
         }
-        if (id == R.id. action_showSrvLog) {
+        if (id == R.id.action_showSrvLog) {
 
-            String SrvLog = PerformServerCommand(getLogCmd, ServerIP, user, passwd);
-
-            Intent intent = new Intent(this, ServerLogActivity.class);
-            intent.putExtra("SERVER_LOG_DATA", SrvLog);
-            startActivity(intent);
+            new Thread() {
+                @Override
+                public void run() {PerformServerCommand(getLogCmd, ServerIP, user, passwd);}}.start();
             return true;
         }
 

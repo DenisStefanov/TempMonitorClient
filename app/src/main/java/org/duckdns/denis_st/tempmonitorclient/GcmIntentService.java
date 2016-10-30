@@ -12,12 +12,14 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -25,11 +27,11 @@ public class GcmIntentService extends IntentService {
 	public static final int NOTIFICATION_ID = 1;
 	private static final String TAG = "GcmIntentService";
 	private NotificationManager mNotificationManager;
-	private static List<String> dataList = null;
+	private static String data = null;
 		
-	public List<String> getData(){
+	public String getData(){
 		System.out.println("returning datalist");	
-		return dataList;
+		return data;
 	}
 	
 	public GcmIntentService() {
@@ -45,7 +47,7 @@ public class GcmIntentService extends IntentService {
 
 		if (!extras.isEmpty()) {
 			if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
-				processData(extras.getString("type"), Arrays.asList(extras.getString("data").split("\n")));
+				processData(extras.getString("type"), extras.getString("data"));
 				//Log.i(TAG, "Received: " + extras.toString());
 			}
 		}
@@ -53,31 +55,27 @@ public class GcmIntentService extends IntentService {
 		GcmBroadcastReceiver.completeWakefulIntent(intent);
 	}
 
-	private void processData(String type, List<String> data){
+	private void processData(String type, String newdata){
 		try {
-			if (dataList == null){
-				dataList = new ArrayList<String>();
-			}
-			System.out.println("Received = " + data + " Type = " + type);
-			if (type.equals("bulk")) {
-				dataList.clear();
-				sendNotification("New data available");
-			} else if (type.equals("upd")) {
-				sendNotification("Update: " + data);
-			} else if (type.equals("alarma")) {
+			//System.out.println("Received = " + newdata + " Type = " + type);
+			data = newdata;
+			if (type.equals("alarma")) {
 				sendNotification("ALARMA: " + data);
 				try {
-					Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-					v.vibrate(3000);
-					
-					Context ctx = getBaseContext();
-					Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-					Intent startIntent = new Intent(ctx, RingtonePlayingService.class);
-					startIntent.putExtra("ringtone-uri", notification.toString());
-					ctx.startService(startIntent);
-				} catch (Exception e) {}
-			}			
-			dataList.addAll(data);
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+                    if (prefs.getBoolean("notifications_new_message", true)) {
+                        if (prefs.getBoolean("notifications_new_message_vibrate", true)) {
+                            Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                            v.vibrate(3000);
+                        }
+                        Context ctx = getBaseContext();
+
+                        Intent startIntent = new Intent(ctx, RingtonePlayingService.class);
+                        startIntent.putExtra("ringtone-uri", prefs.getString("notifications_new_message_ringtone", null));
+                        ctx.startService(startIntent);
+                    }
+				} catch (Exception e) {e.printStackTrace();}
+			}
 		}catch (Exception e) {
 			e.printStackTrace();
 		}

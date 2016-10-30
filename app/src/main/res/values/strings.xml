@@ -26,15 +26,15 @@
     <string name="pref_default_passwd_title">Password</string>
     <string name="pref_default_passwd">raspberry</string>
 
-    <string name="pref_startSrvCmd">sudo service tempmon start</string>
+    <string name="pref_startSrvCmd">sudo python /home/pi/TempMonitorServer/brew_tempc.py start</string>
     <string name="pref_startSrvTitle">Start Tempmon service command</string>
 
-    <string name="pref_stopSrvCmd">sudo service tempmon stop</string>
+    <string name="pref_stopSrvCmd">sudo python /home/pi/TempMonitorServer/brew_tempc.py stop</string>
     <string name="pref_stopSrvTitle">Stop Tempmon service command</string>
 
     <string name="pref_RegIDSrvFile">/tmp/regid.txt</string>
     <string name="pref_RegIDSrvFileTitle">RegID server file name</string>
-    <string name="pref_getLogCmd">cat /var/log/tempmon.log</string>
+    <string name="pref_getLogCmd">tail -n 10 /var/log/tempmon.log</string>
     <string name="pref_getLogCmdTitle">Show Server log</string>
 
 
