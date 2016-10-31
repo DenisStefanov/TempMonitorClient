@@ -3,6 +3,11 @@ package org.duckdns.denis_st.tempmonitorclient;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.OvalShape;
+import android.graphics.drawable.shapes.RectShape;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +17,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.preference.PreferenceManager;
+import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -167,6 +173,22 @@ public class MainActivity extends AppCompatActivity {
             Intent stopIntent = new Intent(ctx, RingtonePlayingService.class);
             ctx.stopService(stopIntent);
 
+            ViewGroup myLayout = (ViewGroup) findViewById(R.id.include);
+
+            ShapeDrawable mStillBar;
+            ShapeDrawable mTowerBar;
+
+            mStillBar = new ShapeDrawable(new RectShape());
+            mStillBar.getPaint().setColor(0xff74AC23);
+            mStillBar.setBounds(10, 10, 100, 100);
+
+            mTowerBar = new ShapeDrawable(new RectShape());
+            mTowerBar.getPaint().setColor(0xff74AC23);
+            mTowerBar.setBounds(100, 100, 200, 200);
+
+            DrawView drawView = new DrawView(this, mStillBar, mTowerBar);
+            myLayout.addView(drawView);
+
             Srvdata = tmgis.getData();
             if (Srvdata != null){
                 TextView LastUpd = (TextView)findViewById(R.id.lastupdate);
@@ -183,7 +205,6 @@ public class MainActivity extends AppCompatActivity {
                 long diffMin = diffSec/60;
                 TextView timeago = (TextView)findViewById(R.id.timeago);
                 timeago.setText(String.valueOf(diffMin) + ":" + String.valueOf(diffSec));
-
             }
         }catch (Exception e) {
             e.printStackTrace();
