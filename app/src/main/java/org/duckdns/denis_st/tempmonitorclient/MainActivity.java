@@ -51,21 +51,14 @@ public class MainActivity extends AppCompatActivity {
         String result = null;
         try{
             JSch jsch=new JSch();
-
             Session session=jsch.getSession(user, host, 22);
             session.setPassword(pwd);
-
             session.setConfig("StrictHostKeyChecking", "no");
-
             session.connect(5000); // making a connection with timeout.
-
             Channel channel=session.openChannel("exec");
-
             InputStream in=channel.getInputStream();
             //((ChannelExec)channel).setErrStream(System.err);
-
             ((ChannelExec)channel).setCommand(command);
-
             channel.connect(5000);
 
             byte[] tmp=new byte[1024];
@@ -117,6 +110,10 @@ public class MainActivity extends AppCompatActivity {
                     ServerIP = prefs.getString("ServerIP", null);
                     user = prefs.getString("user", null);
                     passwd = prefs.getString("passwd", null);
+                    startSrvCmd = prefs.getString("startSrvCmd", null);
+                    stopSrvCmd = prefs.getString("stopSrvCmd", null);
+                    RegIDSrvFile = prefs.getString("RegIDSrvFile", null);
+                    getLogCmd = prefs.getString("getLogCmd", null);
             }
         };
         prefs.registerOnSharedPreferenceChangeListener(prefListener);
@@ -176,10 +173,9 @@ public class MainActivity extends AppCompatActivity {
                 TextView StillTemp = (TextView)findViewById(R.id.tempStillVal);
                 StillTemp.setText(Srvdata.split(",")[2]);
 
-                //Sun Oct 30 17:16:14
                 Date d1 = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(Srvdata.split(",")[0]);
                 Date d2 = Calendar.getInstance().getTime();
-                long diffSec = Math.abs(d1.getTime() - d2.getTime()) / 1000;
+                long diffSec = (d1.getTime() - d2.getTime()) / 1000;
                 long diffMin = diffSec/60;
                 TextView timeago = (TextView)findViewById(R.id.timeago);
                 timeago.setText(String.valueOf(diffMin) + ":" + String.valueOf(diffSec));
@@ -213,7 +209,6 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
-
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
