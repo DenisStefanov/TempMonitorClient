@@ -57,13 +57,13 @@
 
     <EditTextPreference
         android:capitalize="none"
-        android:defaultValue="@string/pref_getLogCmd"
+        android:defaultValue="@string/pref_configSrv"
         android:inputType="textVisiblePassword"
         android:key="getLogCmd"
         android:maxLines="1"
         android:selectAllOnFocus="true"
         android:singleLine="true"
-        android:title="@string/pref_getLogCmdTitle" />
+        android:title="@string/pref_configSrvTitle" />
     <EditTextPreference
         android:capitalize="none"
         android:defaultValue="@string/pref_RegIDSrvFile"

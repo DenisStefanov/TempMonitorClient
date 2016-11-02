@@ -22,8 +22,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.preference.PreferenceManager;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.ExpandableListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
@@ -47,7 +51,9 @@ public class MainActivity extends AppCompatActivity {
     private String passwd;
     private SharedPreferences.OnSharedPreferenceChangeListener prefListener;
     private String regid = null;
-    private String startSrvCmd, stopSrvCmd, RegIDSrvFile, getLogCmd;
+    private String startSrvCmd, stopSrvCmd, RegIDSrvFile, configSrvCmd;
+    private String stillTempThresholdText = "0.0";
+    private String towerTempThresholdText = "0.0";
 
     private void showToastinMain(final String text) {
         MainActivity.this.runOnUiThread(new Runnable() {
@@ -96,12 +102,6 @@ public class MainActivity extends AppCompatActivity {
             System.out.println(e);
             showToastinMain(e.toString());
         }
-
-        if (command.equals(getLogCmd)) {
-            Intent intent = new Intent(this, ServerLogActivity.class);
-            intent.putExtra("SERVER_LOG_DATA", result);
-            startActivity(intent);
-        }
         return;
     }
     private void GCMRegister() {
@@ -136,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
         startSrvCmd = prefs.getString("startSrvCmd", null);
         stopSrvCmd = prefs.getString("stopSrvCmd", null);
         RegIDSrvFile = prefs.getString("RegIDSrvFile", null);
-        getLogCmd = prefs.getString("getLogCmd", null);
+        configSrvCmd = prefs.getString("configSrvCmd", null);
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -172,6 +172,41 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
+        toggleStill.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                TextView StillTempFix = (TextView)findViewById(R.id.editStillTempFix);
+                if (isChecked) {
+                    StillTempFix.setEnabled(false);
+                    stillTempThresholdText = StillTempFix.getText().toString();
+                } else {
+                    StillTempFix.setEnabled(true);
+                    stillTempThresholdText = "0.0";
+                }
+                String Srvdata = tmgis.getData();
+                Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
+                if (Srvdata != null)
+                    updateScreen(Srvdata);
+            }
+        });
+        ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
+        toggleTower.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                TextView TowerTempFix = (TextView)findViewById(R.id.editTowerTempFix);
+                if (isChecked) {
+                    TowerTempFix.setEnabled(false);
+                    towerTempThresholdText = TowerTempFix.getText().toString();
+                } else {
+                    TowerTempFix.setEnabled(true);
+                    towerTempThresholdText = "0.0";
+                }
+                String Srvdata = tmgis.getData();
+                Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
+                if (Srvdata != null)
+                    updateScreen(Srvdata);
+
+            }
+        });
     }
 
     private void updateScreen(String Srvdata){
@@ -179,9 +214,7 @@ public class MainActivity extends AppCompatActivity {
             String srvDateText = Srvdata.split(",")[0];
             Date srvDate = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(srvDateText);
             String stillTempText = Srvdata.split(",")[1];
-            String stillTempThresholdText = "90";
             String towerTempText = Srvdata.split(",")[2];
-            String towerTempThresholdText = "90";
 
             Context ctx = getBaseContext();
             Intent stopIntent = new Intent(ctx, RingtonePlayingService.class);
@@ -192,20 +225,17 @@ public class MainActivity extends AppCompatActivity {
             DrawView drawView = new DrawView(this, stillTempText, stillTempThresholdText, towerTempText, towerTempThresholdText);
             myLayout.addView(drawView);
 
-//            TextView LastUpd = (TextView)findViewById(R.id.lastupdate);
-//            LastUpd.setText(srvDateText);
-//            TextView TowerTemp = (TextView)findViewById(R.id.tempTowerVal);
-//            TowerTemp.setText(towerTempText);
-//            TextView StillTemp = (TextView)findViewById(R.id.tempStillVal);
-//            StillTemp.setText(stillTempText);
-//
-//            Date nowDate = Calendar.getInstance().getTime();
-//            long diffSec = Math.abs(srvDate.getTime() - nowDate.getTime()) / 1000;
-//            long diffMin = diffSec/60;
-//            TextView timeago = (TextView)findViewById(R.id.timeago);
-//            timeago.setText(String.valueOf(diffMin) + ":" + String.valueOf(diffSec));
+            Date nowDate = Calendar.getInstance().getTime();
+            long diffSec = Math.abs(srvDate.getTime() - nowDate.getTime()) / 1000;
+            long diffMin = diffSec/60;
 
-        }catch (Exception e) {
+            TextView LastUpd = (TextView)findViewById(R.id.lastupdate);
+            LastUpd.setText(srvDateText + " (" + String.valueOf(diffMin) + ":" + String.valueOf(diffSec) + " ago)");
+            TextView TowerTemp = (TextView)findViewById(R.id.tempTowerVal);
+            TowerTemp.setText(towerTempText);
+            TextView StillTemp = (TextView)findViewById(R.id.tempStillVal);
+            StillTemp.setText(stillTempText);
+    }catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -265,11 +295,20 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {PerformServerCommand(stopSrvCmd, ServerIP, user, passwd);}}.start();
             return true;
         }
-        if (id == R.id.action_showSrvLog) {
+        if (id == R.id.action_configSrv) {
+            final String params, params1, params2;
+            TextView StillTempFix = (TextView)findViewById(R.id.editStillTempFix);
+            ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
+            TextView TowerTempFix = (TextView)findViewById(R.id.editTowerTempFix);
+            ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
+
+            params = toggleStill.isChecked()?"Conf1,fixtemp,yes;":"Conf1,fixtemp,no;";
+            params1 = toggleTower.isChecked()?"Conf2,fixtemp,yes;":"Conf2,fixtemp,no;";
+            params2 = "Conf1, absolute," + StillTempFix.getText().toString() + ";"+ "Conf2, absolute," + TowerTempFix.getText().toString();
 
             new Thread() {
                 @Override
-                public void run() {PerformServerCommand(getLogCmd, ServerIP, user, passwd);}}.start();
+                public void run() {PerformServerCommand(configSrvCmd + " " + params + params1 + params2, ServerIP, user, passwd);}}.start();
             return true;
         }
 

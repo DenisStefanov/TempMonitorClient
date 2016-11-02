@@ -3,6 +3,7 @@ package org.duckdns.denis_st.tempmonitorclient;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.drawable.ShapeDrawable;
@@ -18,7 +19,7 @@ public class DrawView extends View {
     private ShapeDrawable mStillBarS;
     private ShapeDrawable mTowerBarS;
     private ShapeDrawable mStillPath;
-    private ShapeDrawable shape;
+    private ShapeDrawable mTowerPath;
 
     public DrawView(Context context, String stillTempText, String stillTempThresholdText,
                     String towerTempText, String towerTempThresholdText) {
@@ -66,41 +67,34 @@ public class DrawView extends View {
 
         //limit lines
         Path stillPath = new Path();
-//            stillPath.moveTo(ChartLeft, dispH - (ChartBottom + (int)towerTempThreshold *DegreePixRatio));
-//            stillPath.lineTo(ChartLeft+ChartWidth, dispH - (ChartBottom + (int)towerTempThreshold *DegreePixRatio));
-        stillPath.moveTo(0, 0);
-        stillPath.lineTo(500, 500);
-        mStillPath = new ShapeDrawable(new PathShape(stillPath, 1, 1));
-        mStillPath.setIntrinsicHeight(600);
-        mStillPath.setIntrinsicWidth(600);
-        mStillPath.getPaint().setColor(Color.BLACK);
+        stillPath.moveTo(ChartLeft, dispH - (ChartBottom + (int)stillTempThreshold *DegreePixRatio));
+        stillPath.lineTo(ChartLeft+ChartWidth, dispH - (ChartBottom + (int)stillTempThreshold *DegreePixRatio));
+        mStillPath = new ShapeDrawable(new PathShape(stillPath, dispW, dispH));
+        mStillPath.getPaint().setColor(Color.RED);
+        mStillPath.getPaint().setStrokeWidth(2);
         mStillPath.getPaint().setStyle(Paint.Style.STROKE);
+        mStillPath.getPaint().setPathEffect(new DashPathEffect(new float[] {10,20}, 0));
+        mStillPath.setBounds(0, 0, dispW, dispH);
 
-
-        Path p = new Path();
-        p.moveTo(50, 0);
-        p.lineTo(25, 100);
-        p.lineTo(100, 50);
-        p.lineTo(0, 50);
-        p.lineTo(75, 100);
-        p.lineTo(50, 0);
-
-        shape = new ShapeDrawable(new PathShape(p, this.getWidth(), this.getHeight()));
-        shape.setIntrinsicHeight(100);
-        shape.setIntrinsicWidth(100);
-        shape.getPaint().setColor(Color.RED);
-        shape.getPaint().setStyle(Paint.Style.STROKE);
-        shape.setBounds(200,200, this.getWidth(), this.getHeight());
+        Path towerPath = new Path();
+        towerPath.moveTo(ChartLeft+ChartWidth+ChartGap, dispH - (ChartBottom + (int)towerTempThreshold *DegreePixRatio));
+        towerPath.lineTo(ChartLeft+ChartWidth+ChartGap+ChartWidth, dispH - (ChartBottom + (int)towerTempThreshold *DegreePixRatio));
+        mTowerPath = new ShapeDrawable(new PathShape(towerPath, dispW, dispH));
+        mTowerPath.getPaint().setColor(Color.RED);
+        mTowerPath.getPaint().setStrokeWidth(2);
+        mTowerPath.getPaint().setStyle(Paint.Style.STROKE);
+        mTowerPath.getPaint().setPathEffect(new DashPathEffect(new float[] {10,20}, 0));
+        mTowerPath.setBounds(0, 0, dispW, dispH);
 
     }
     @Override
     public void onDraw(Canvas canvas) {
-//        mStillBarS.draw(canvas);
-//        mTowerBarS.draw(canvas);
+        mStillBarS.draw(canvas);
+        mTowerBarS.draw(canvas);
         mStillBar.draw(canvas);
-//        mTowerBar.draw(canvas);
+        mTowerBar.draw(canvas);
         mStillPath.draw(canvas);
-        shape.draw(canvas);
+        mTowerPath.draw(canvas);
     }
 
 }

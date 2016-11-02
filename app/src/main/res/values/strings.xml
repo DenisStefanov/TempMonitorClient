@@ -5,7 +5,7 @@
     <string name="action_updRegID">Update RegID</string>
     <string name="action_startSrv">Start Server</string>
     <string name="action_stopSrv">Stop Server</string>
-    <string name="action_showSrvLog">Show Server log</string>
+    <string name="action_configSrv">Upload config to the Server</string>
 
     <!-- Strings related to Settings -->
 
@@ -34,8 +34,9 @@
 
     <string name="pref_RegIDSrvFile">/tmp/regid.txt</string>
     <string name="pref_RegIDSrvFileTitle">RegID server file name</string>
-    <string name="pref_getLogCmd">tail -n 10 /var/log/tempmon.log</string>
-    <string name="pref_getLogCmdTitle">Show Server log</string>
+
+    <string name="pref_configSrv">python /home/pi/TempMonitorServer/config.py</string>
+    <string name="pref_configSrvTitle">Server configuration script run</string>
 
 
     <string name="pref_title_add_friends_to_messages">Add friends to messages</string>
