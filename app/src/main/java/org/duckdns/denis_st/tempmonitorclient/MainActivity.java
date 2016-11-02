@@ -5,13 +5,17 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
+import android.graphics.drawable.shapes.PathShape;
 import android.graphics.drawable.shapes.RectShape;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Menu;
@@ -38,7 +42,6 @@ public class MainActivity extends AppCompatActivity {
     private GcmRegistrar tmgcm;
     private GcmIntentService tmgis;
     private PowerManager.WakeLock wakeLock;
-    private String Srvdata = null;
     private String ServerIP;
     private String user;
     private String passwd;
@@ -159,15 +162,26 @@ public class MainActivity extends AppCompatActivity {
         v.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_UP){requestForData();}
+                if (event.getAction() == MotionEvent.ACTION_UP){
+                    String Srvdata = tmgis.getData();
+                    Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
+                    if (Srvdata != null)
+                        updateScreen(Srvdata);
+                }
                 return true;
             }
         });
 
     }
 
-    private void requestForData(){
+    private void updateScreen(String Srvdata){
         try {
+            String srvDateText = Srvdata.split(",")[0];
+            Date srvDate = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(srvDateText);
+            String stillTempText = Srvdata.split(",")[1];
+            String stillTempThresholdText = "90";
+            String towerTempText = Srvdata.split(",")[2];
+            String towerTempThresholdText = "90";
 
             Context ctx = getBaseContext();
             Intent stopIntent = new Intent(ctx, RingtonePlayingService.class);
@@ -175,37 +189,22 @@ public class MainActivity extends AppCompatActivity {
 
             ViewGroup myLayout = (ViewGroup) findViewById(R.id.include);
 
-            ShapeDrawable mStillBar;
-            ShapeDrawable mTowerBar;
-
-            mStillBar = new ShapeDrawable(new RectShape());
-            mStillBar.getPaint().setColor(0xff74AC23);
-            mStillBar.setBounds(10, 10, 100, 100);
-
-            mTowerBar = new ShapeDrawable(new RectShape());
-            mTowerBar.getPaint().setColor(0xff74AC23);
-            mTowerBar.setBounds(100, 100, 200, 200);
-
-            DrawView drawView = new DrawView(this, mStillBar, mTowerBar);
+            DrawView drawView = new DrawView(this, stillTempText, stillTempThresholdText, towerTempText, towerTempThresholdText);
             myLayout.addView(drawView);
 
-            Srvdata = tmgis.getData();
-            if (Srvdata != null){
-                TextView LastUpd = (TextView)findViewById(R.id.lastupdate);
-                LastUpd.setText(Srvdata.split(",")[0]);
-                TextView TowerTemp = (TextView)findViewById(R.id.tempTowerVal);
-                TowerTemp.setText(Srvdata.split(",")[1]);
-                TextView StillTemp = (TextView)findViewById(R.id.tempStillVal);
-                StillTemp.setText(Srvdata.split(",")[2]);
+//            TextView LastUpd = (TextView)findViewById(R.id.lastupdate);
+//            LastUpd.setText(srvDateText);
+//            TextView TowerTemp = (TextView)findViewById(R.id.tempTowerVal);
+//            TowerTemp.setText(towerTempText);
+//            TextView StillTemp = (TextView)findViewById(R.id.tempStillVal);
+//            StillTemp.setText(stillTempText);
+//
+//            Date nowDate = Calendar.getInstance().getTime();
+//            long diffSec = Math.abs(srvDate.getTime() - nowDate.getTime()) / 1000;
+//            long diffMin = diffSec/60;
+//            TextView timeago = (TextView)findViewById(R.id.timeago);
+//            timeago.setText(String.valueOf(diffMin) + ":" + String.valueOf(diffSec));
 
-                //Sun Oct 30 17:16:14
-                Date d1 = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(Srvdata.split(",")[0]);
-                Date d2 = Calendar.getInstance().getTime();
-                long diffSec = Math.abs(d1.getTime() - d2.getTime()) / 1000;
-                long diffMin = diffSec/60;
-                TextView timeago = (TextView)findViewById(R.id.timeago);
-                timeago.setText(String.valueOf(diffMin) + ":" + String.valueOf(diffSec));
-            }
         }catch (Exception e) {
             e.printStackTrace();
         }
