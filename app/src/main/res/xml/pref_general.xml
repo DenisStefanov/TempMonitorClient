@@ -74,17 +74,6 @@
         android:singleLine="true"
         android:title="@string/pref_configSrvGetTitle" />
 
-    <EditTextPreference
-        android:capitalize="none"
-        android:defaultValue="@string/pref_RegIDSrvFile"
-        android:inputType="textVisiblePassword"
-        android:key="RegIDSrvFile"
-        android:maxLines="1"
-        android:selectAllOnFocus="true"
-        android:singleLine="true"
-        android:title="@string/pref_RegIDSrvFileTitle" />
-
-
     <!-- NOTE: Hide buttons to simplify the UI. Users can touch outside the dialog to
          dismiss it. -->
     <!-- NOTE: ListPreference's summary should be set to its value by the activity code. -->

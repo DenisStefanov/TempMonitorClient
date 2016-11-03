@@ -197,7 +197,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             bindPreferenceSummaryToValue(findPreference("stopSrvCmd"));
             bindPreferenceSummaryToValue(findPreference("configSrvCmd"));
             bindPreferenceSummaryToValue(findPreference("configSrvGetCmd"));
-            bindPreferenceSummaryToValue(findPreference("RegIDSrvFile"));
             bindPreferenceSummaryToValue(findPreference("example_list"));
         }
 

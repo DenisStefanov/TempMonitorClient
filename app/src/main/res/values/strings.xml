@@ -33,9 +33,6 @@
     <string name="pref_stopSrvCmd">sudo python /home/pi/TempMonitorServer/brew_tempc.py stop</string>
     <string name="pref_stopSrvTitle">Stop Tempmon service command</string>
 
-    <string name="pref_RegIDSrvFile">/home/pi/TempMonitorServer/regid.txt</string>
-    <string name="pref_RegIDSrvFileTitle">RegID server file name</string>
-
     <string name="pref_configSrv">python /home/pi/TempMonitorServer/config.py set</string>
     <string name="pref_configSrvTitle">Set Server config script run</string>
 
@@ -94,7 +91,7 @@
     <!-- Example settings for Notifications -->
     <string name="pref_header_notifications">Notifications</string>
 
-    <string name="pref_title_new_message_notifications">New message notifications</string>
+    <string name="pref_title_new_message_notifications">Alarm notifications</string>
 
     <string name="pref_title_ringtone">Ringtone</string>
     <string name="pref_ringtone_silent">Silent</string>

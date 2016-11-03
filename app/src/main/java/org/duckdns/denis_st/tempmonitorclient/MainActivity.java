@@ -62,8 +62,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
-    private void PerformServerCommand(String command, String host, String user, String pwd){
-        String result;
+    private void PerformServerCommand(String command, String host, String user, String pwd, Integer cmdtype){
+        String result = "";
         try{
             JSch jsch=new JSch();
 
@@ -83,13 +83,16 @@ public class MainActivity extends AppCompatActivity {
                 if(i<0)break;
                 result = result + new String(tmp, 0, i);
             }
-
             showToastinMain(result);
             System.out.println("host response: " + result);
             System.out.println("exit-status: " + channel.getExitStatus());
             Thread.sleep(500);
             channel.disconnect();
             session.disconnect();
+            if (cmdtype == R.id.action_configSrvGet) {
+                if (!result.isEmpty())
+                    parseServerPrefs(result);
+            }
         }
         catch(Exception e){
             System.out.println(e);
@@ -97,14 +100,49 @@ public class MainActivity extends AppCompatActivity {
         }
         return;
     }
+    private void parseServerPrefs(String result) {
+        TextView StillTempFix = (TextView) findViewById(R.id.editStillTempFix);
+        TextView TowerTempFix = (TextView) findViewById(R.id.editTowerTempFix);
+        ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
+        ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
+        for (String configEl : result.split(";")) {
+            if (configEl.split(",")[0].equals("Conf1")) {
+                if (configEl.split(",")[1].equals("fixtemp")) {
+                    toggleStill.setChecked(configEl.split(",")[2].equals("yes"));
+                }
+                if (configEl.split(",")[1].equals("absolute")) {
+                    StillTempFix.setText(configEl.split(",")[2]);
+                }
+            }
+            if (configEl.split(",")[0].equals("Conf2")) {
+                if (configEl.split(",")[1].equals("fixtemp")) {
+                    toggleTower.setChecked(configEl.split(",")[2].equals("yes"));
+                }
+                if (configEl.split(",")[1].equals("absolute")) {
+                    TowerTempFix.setText(configEl.split(",")[2]);
+                }
+            }
+        }
+    }
+
     private void GCMRegister() {
             System.out.println("Registering with GCM...");
             regid = tmgcm.register();
             if (!regid.isEmpty()) {
                 System.out.println("Got GCM reg id. [" + regid + "]");
                 }
-            };
+    }
 
+    void getPrefs(SharedPreferences prefs) {
+        ServerIP = prefs.getString("ServerIP", null);
+        user = prefs.getString("user", null);
+        passwd = prefs.getString("passwd", null);
+        startSrvCmd = prefs.getString("startSrvCmd", null);
+        stopSrvCmd = prefs.getString("stopSrvCmd", null);
+        RegIDSrvFile = prefs.getString("RegIDSrvFile", null);
+        configSrvCmd = prefs.getString("configSrvCmd", null);
+        configSrvGetCmd = prefs.getString("configSrvGetCmd", null);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,28 +152,15 @@ public class MainActivity extends AppCompatActivity {
         PreferenceManager.setDefaultValues(this, R.xml.pref_notification, false);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        getPrefs(prefs);
+
         prefListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-                ServerIP = prefs.getString("ServerIP", null);
-                user = prefs.getString("user", null);
-                passwd = prefs.getString("passwd", null);
-                startSrvCmd = prefs.getString("startSrvCmd", null);
-                stopSrvCmd = prefs.getString("stopSrvCmd", null);
-                RegIDSrvFile = prefs.getString("RegIDSrvFile", null);
-                configSrvCmd = prefs.getString("configSrvCmd", null);
-                configSrvGetCmd = prefs.getString("configSrvGetCmd", null);
+                getPrefs(prefs);
             }
         };
         prefs.registerOnSharedPreferenceChangeListener(prefListener);
 
-        ServerIP = prefs.getString("ServerIP", null);
-        user = prefs.getString("user", null);
-        passwd = prefs.getString("passwd", null);
-        startSrvCmd = prefs.getString("startSrvCmd", null);
-        stopSrvCmd = prefs.getString("stopSrvCmd", null);
-        RegIDSrvFile = prefs.getString("RegIDSrvFile", null);
-        configSrvCmd = prefs.getString("configSrvCmd", null);
-        configSrvGetCmd = prefs.getString("configSrvGetCmd", null);
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -163,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_UP){
                     String Srvdata = tmgis.getData();
-                    //Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
+                    Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
                     if (Srvdata != null)
                         updateScreen(Srvdata);
                 }
@@ -184,7 +209,6 @@ public class MainActivity extends AppCompatActivity {
                     stillTempThresholdText = "0.0";
                 }
                 String Srvdata = tmgis.getData();
-                //Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
                 if (Srvdata != null)
                     updateScreen(Srvdata);
             }
@@ -202,7 +226,6 @@ public class MainActivity extends AppCompatActivity {
                     towerTempThresholdText = "0.0";
                 }
                 String Srvdata = tmgis.getData();
-                //Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
                 if (Srvdata != null)
                     updateScreen(Srvdata);
 
@@ -279,21 +302,25 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_updRegID) {
+            if (regid.isEmpty()) {
+                showToastinMain("RegID is empty. Will not update Server");
+                return false;
+            }
             new Thread() {
                 @Override
-                public void run() {PerformServerCommand("echo " + regid + " > " + RegIDSrvFile, ServerIP, user, passwd);}}.start();
+                public void run() {PerformServerCommand(configSrvCmd + " 'Common,regid," + "[[" + regid + "]]'", ServerIP, user, passwd, R.id.action_updRegID);}}.start();
             return true;
         }
         if (id == R.id.action_startSrv) {
             new Thread() {
                 @Override
-                public void run() {PerformServerCommand(startSrvCmd, ServerIP, user, passwd);}}.start();
+                public void run() {PerformServerCommand(startSrvCmd, ServerIP, user, passwd, R.id.action_startSrv);}}.start();
             return true;
         }
         if (id == R.id.action_stopSrv) {
             new Thread() {
                 @Override
-                public void run() {PerformServerCommand(stopSrvCmd, ServerIP, user, passwd);}}.start();
+                public void run() {PerformServerCommand(stopSrvCmd, ServerIP, user, passwd,R.id.action_stopSrv);}}.start();
             return true;
         }
         if (id == R.id.action_configSrv) {
@@ -309,7 +336,7 @@ public class MainActivity extends AppCompatActivity {
 
             new Thread() {
                 @Override
-                public void run() {PerformServerCommand(configSrvCmd + " '" + params + params1 + params2 + "'", ServerIP, user, passwd);}}.start();
+                public void run() {PerformServerCommand(configSrvCmd + " '" + params + params1 + params2 + "'", ServerIP, user, passwd, R.id.action_configSrv);}}.start();
             return true;
         }
         if (id == R.id.action_configSrvGet) {
@@ -319,7 +346,7 @@ public class MainActivity extends AppCompatActivity {
 
             new Thread() {
                 @Override
-                public void run() {PerformServerCommand(configSrvGetCmd + " '" + params + "'", ServerIP, user, passwd);}}.start();
+                public void run() {PerformServerCommand(configSrvGetCmd + " '" + params + "'", ServerIP, user, passwd, R.id.action_configSrvGet);}}.start();
             return true;
         }
         return super.onOptionsItemSelected(item);
