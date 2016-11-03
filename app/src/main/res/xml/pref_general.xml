@@ -59,11 +59,21 @@
         android:capitalize="none"
         android:defaultValue="@string/pref_configSrv"
         android:inputType="textVisiblePassword"
-        android:key="getLogCmd"
+        android:key="configSrvCmd"
         android:maxLines="1"
         android:selectAllOnFocus="true"
         android:singleLine="true"
         android:title="@string/pref_configSrvTitle" />
+    <EditTextPreference
+        android:capitalize="none"
+        android:defaultValue="@string/pref_configSrvGet"
+        android:inputType="textVisiblePassword"
+        android:key="configSrvGetCmd"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/pref_configSrvGetTitle" />
+
     <EditTextPreference
         android:capitalize="none"
         android:defaultValue="@string/pref_RegIDSrvFile"

@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private String passwd;
     private SharedPreferences.OnSharedPreferenceChangeListener prefListener;
     private String regid = null;
-    private String startSrvCmd, stopSrvCmd, RegIDSrvFile, configSrvCmd;
+    private String startSrvCmd, stopSrvCmd, RegIDSrvFile, configSrvCmd, configSrvGetCmd;
     private String stillTempThresholdText = "0.0";
     private String towerTempThresholdText = "0.0";
 
@@ -63,24 +63,18 @@ public class MainActivity extends AppCompatActivity {
 
     }
     private void PerformServerCommand(String command, String host, String user, String pwd){
-        String result = null;
+        String result;
         try{
             JSch jsch=new JSch();
 
             Session session=jsch.getSession(user, host, 22);
             session.setPassword(pwd);
-
             session.setConfig("StrictHostKeyChecking", "no");
-
             session.connect(5000); // making a connection with timeout.
-
             Channel channel=session.openChannel("exec");
-
             InputStream in=channel.getInputStream();
             //((ChannelExec)channel).setErrStream(System.err);
-
             ((ChannelExec)channel).setCommand(command);
-
             channel.connect(5000);
 
             byte[] tmp=new byte[1024];
@@ -90,8 +84,7 @@ public class MainActivity extends AppCompatActivity {
                 result = result + new String(tmp, 0, i);
             }
 
-            showToastinMain(result + " Ok");
-
+            showToastinMain(result);
             System.out.println("host response: " + result);
             System.out.println("exit-status: " + channel.getExitStatus());
             Thread.sleep(500);
@@ -123,9 +116,14 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         prefListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-                    ServerIP = prefs.getString("ServerIP", null);
-                    user = prefs.getString("user", null);
-                    passwd = prefs.getString("passwd", null);
+                ServerIP = prefs.getString("ServerIP", null);
+                user = prefs.getString("user", null);
+                passwd = prefs.getString("passwd", null);
+                startSrvCmd = prefs.getString("startSrvCmd", null);
+                stopSrvCmd = prefs.getString("stopSrvCmd", null);
+                RegIDSrvFile = prefs.getString("RegIDSrvFile", null);
+                configSrvCmd = prefs.getString("configSrvCmd", null);
+                configSrvGetCmd = prefs.getString("configSrvGetCmd", null);
             }
         };
         prefs.registerOnSharedPreferenceChangeListener(prefListener);
@@ -137,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
         stopSrvCmd = prefs.getString("stopSrvCmd", null);
         RegIDSrvFile = prefs.getString("RegIDSrvFile", null);
         configSrvCmd = prefs.getString("configSrvCmd", null);
+        configSrvGetCmd = prefs.getString("configSrvGetCmd", null);
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -164,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_UP){
                     String Srvdata = tmgis.getData();
-                    Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
+                    //Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
                     if (Srvdata != null)
                         updateScreen(Srvdata);
                 }
@@ -181,10 +180,11 @@ public class MainActivity extends AppCompatActivity {
                     stillTempThresholdText = StillTempFix.getText().toString();
                 } else {
                     StillTempFix.setEnabled(true);
+                    StillTempFix.setText("0.0");
                     stillTempThresholdText = "0.0";
                 }
                 String Srvdata = tmgis.getData();
-                Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
+                //Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
                 if (Srvdata != null)
                     updateScreen(Srvdata);
             }
@@ -198,10 +198,11 @@ public class MainActivity extends AppCompatActivity {
                     towerTempThresholdText = TowerTempFix.getText().toString();
                 } else {
                     TowerTempFix.setEnabled(true);
+                    TowerTempFix.setText("0.0");
                     towerTempThresholdText = "0.0";
                 }
                 String Srvdata = tmgis.getData();
-                Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
+                //Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
                 if (Srvdata != null)
                     updateScreen(Srvdata);
 
@@ -304,14 +305,23 @@ public class MainActivity extends AppCompatActivity {
 
             params = toggleStill.isChecked()?"Conf1,fixtemp,yes;":"Conf1,fixtemp,no;";
             params1 = toggleTower.isChecked()?"Conf2,fixtemp,yes;":"Conf2,fixtemp,no;";
-            params2 = "Conf1, absolute," + StillTempFix.getText().toString() + ";"+ "Conf2, absolute," + TowerTempFix.getText().toString();
+            params2 = "Conf1,absolute," + StillTempFix.getText().toString() + ";"+ "Conf2,absolute," + TowerTempFix.getText().toString();
 
             new Thread() {
                 @Override
-                public void run() {PerformServerCommand(configSrvCmd + " " + params + params1 + params2, ServerIP, user, passwd);}}.start();
+                public void run() {PerformServerCommand(configSrvCmd + " '" + params + params1 + params2 + "'", ServerIP, user, passwd);}}.start();
             return true;
         }
+        if (id == R.id.action_configSrvGet) {
+            final String params;
 
+            params = "Conf1,fixtemp;Conf2,fixtemp;Conf1,absolute;Conf2,absolute";
+
+            new Thread() {
+                @Override
+                public void run() {PerformServerCommand(configSrvGetCmd + " '" + params + "'", ServerIP, user, passwd);}}.start();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 }
