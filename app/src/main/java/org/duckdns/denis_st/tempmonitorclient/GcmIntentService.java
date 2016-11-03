@@ -57,7 +57,7 @@ public class GcmIntentService extends IntentService {
 
 	private void processData(String type, String newdata){
 		try {
-			//System.out.println("Received = " + newdata + " Type = " + type);
+			System.out.println("Received = " + newdata + " Type = " + type);
 			data = newdata;
 			if (type.equals("alarma")) {
 				sendNotification("ALARMA: " + data);
@@ -71,6 +71,7 @@ public class GcmIntentService extends IntentService {
                         Context ctx = getBaseContext();
 
                         Intent startIntent = new Intent(ctx, RingtonePlayingService.class);
+                        String s = prefs.getString("notifications_new_message_ringtone", "content://settings/system/notification_sound");
                         startIntent.putExtra("ringtone-uri", prefs.getString("notifications_new_message_ringtone", null));
                         ctx.startService(startIntent);
                     }

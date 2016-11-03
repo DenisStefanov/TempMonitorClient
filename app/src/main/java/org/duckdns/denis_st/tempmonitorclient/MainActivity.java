@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private String passwd;
     private SharedPreferences.OnSharedPreferenceChangeListener prefListener;
     private String regid = null;
-    private String startSrvCmd, stopSrvCmd, RegIDSrvFile, configSrvCmd, configSrvGetCmd;
+    private String startSrvCmd, stopSrvCmd, configSrvCmd, configSrvGetCmd;
     private String stillTempThresholdText = "0.0";
     private String towerTempThresholdText = "0.0";
 
@@ -62,6 +62,40 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+
+    private void updateUIControlsInMain(final String result) {
+        MainActivity.this.runOnUiThread(new Runnable() {
+            public void run() {
+                TextView StillTempFix = (TextView) findViewById(R.id.editStillTempFix);
+                TextView TowerTempFix = (TextView) findViewById(R.id.editTowerTempFix);
+                ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
+                ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
+                for (String configEl : result.split(";")) {
+                    if (configEl.split(",")[0].equals("Conf1")) {
+                        if (configEl.split(",")[1].equals("fixtemp")) {
+                            toggleStill.setChecked(configEl.split(",")[2].equals("yes"));
+                        }
+                        if (configEl.split(",")[1].equals("absolute")) {
+                            StillTempFix.setText(configEl.split(",")[2]);
+                            stillTempThresholdText = StillTempFix.getText().toString();
+                        }
+                    }
+                    if (configEl.split(",")[0].equals("Conf2")) {
+                        if (configEl.split(",")[1].equals("fixtemp")) {
+                            toggleTower.setChecked(configEl.split(",")[2].equals("yes"));
+                        }
+                        if (configEl.split(",")[1].equals("absolute")) {
+                            TowerTempFix.setText(configEl.split(",")[2]);
+                            towerTempThresholdText = TowerTempFix.getText().toString();
+                        }
+                    }
+                }
+                String Srvdata = tmgis.getData();
+                updateScreen(Srvdata);
+            }
+        });
+    }
+
     private void PerformServerCommand(String command, String host, String user, String pwd, Integer cmdtype){
         String result = "";
         try{
@@ -91,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
             session.disconnect();
             if (cmdtype == R.id.action_configSrvGet) {
                 if (!result.isEmpty())
-                    parseServerPrefs(result);
+                    updateUIControlsInMain(result);
             }
         }
         catch(Exception e){
@@ -99,30 +133,6 @@ public class MainActivity extends AppCompatActivity {
             showToastinMain(e.toString());
         }
         return;
-    }
-    private void parseServerPrefs(String result) {
-        TextView StillTempFix = (TextView) findViewById(R.id.editStillTempFix);
-        TextView TowerTempFix = (TextView) findViewById(R.id.editTowerTempFix);
-        ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
-        ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
-        for (String configEl : result.split(";")) {
-            if (configEl.split(",")[0].equals("Conf1")) {
-                if (configEl.split(",")[1].equals("fixtemp")) {
-                    toggleStill.setChecked(configEl.split(",")[2].equals("yes"));
-                }
-                if (configEl.split(",")[1].equals("absolute")) {
-                    StillTempFix.setText(configEl.split(",")[2]);
-                }
-            }
-            if (configEl.split(",")[0].equals("Conf2")) {
-                if (configEl.split(",")[1].equals("fixtemp")) {
-                    toggleTower.setChecked(configEl.split(",")[2].equals("yes"));
-                }
-                if (configEl.split(",")[1].equals("absolute")) {
-                    TowerTempFix.setText(configEl.split(",")[2]);
-                }
-            }
-        }
     }
 
     private void GCMRegister() {
@@ -139,7 +149,6 @@ public class MainActivity extends AppCompatActivity {
         passwd = prefs.getString("passwd", null);
         startSrvCmd = prefs.getString("startSrvCmd", null);
         stopSrvCmd = prefs.getString("stopSrvCmd", null);
-        RegIDSrvFile = prefs.getString("RegIDSrvFile", null);
         configSrvCmd = prefs.getString("configSrvCmd", null);
         configSrvGetCmd = prefs.getString("configSrvGetCmd", null);
     }
@@ -168,6 +177,10 @@ public class MainActivity extends AppCompatActivity {
 
         tmgis = new GcmIntentService();
 
+        String Srvdata = tmgis.getData();
+        if (Srvdata != null)
+            updateScreen(Srvdata);
+
         PowerManager pm;
         pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(pm.SCREEN_BRIGHT_WAKE_LOCK, "My wakelock");
@@ -188,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_UP){
                     String Srvdata = tmgis.getData();
-                    Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
+                    //Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
                     if (Srvdata != null)
                         updateScreen(Srvdata);
                 }
@@ -205,8 +218,6 @@ public class MainActivity extends AppCompatActivity {
                     stillTempThresholdText = StillTempFix.getText().toString();
                 } else {
                     StillTempFix.setEnabled(true);
-                    StillTempFix.setText("0.0");
-                    stillTempThresholdText = "0.0";
                 }
                 String Srvdata = tmgis.getData();
                 if (Srvdata != null)
@@ -222,8 +233,6 @@ public class MainActivity extends AppCompatActivity {
                     towerTempThresholdText = TowerTempFix.getText().toString();
                 } else {
                     TowerTempFix.setEnabled(true);
-                    TowerTempFix.setText("0.0");
-                    towerTempThresholdText = "0.0";
                 }
                 String Srvdata = tmgis.getData();
                 if (Srvdata != null)
@@ -308,7 +317,7 @@ public class MainActivity extends AppCompatActivity {
             }
             new Thread() {
                 @Override
-                public void run() {PerformServerCommand(configSrvCmd + " 'Common,regid," + "[[" + regid + "]]'", ServerIP, user, passwd, R.id.action_updRegID);}}.start();
+                public void run() {PerformServerCommand(configSrvCmd + " 'Common,regid,"  + regid + "'", ServerIP, user, passwd, R.id.action_updRegID);}}.start();
             return true;
         }
         if (id == R.id.action_startSrv) {

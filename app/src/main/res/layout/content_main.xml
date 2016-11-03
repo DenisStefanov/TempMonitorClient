@@ -27,7 +27,7 @@
         android:text="0.0"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/tempTowerVal"
+        android:id="@+id/tempStillVal"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
@@ -42,7 +42,7 @@
         android:layout_alignParentStart="true"
         android:layout_marginLeft="150dp"
         android:layout_marginBottom="30dp"
-        android:id="@+id/tempStillVal" />
+        android:id="@+id/tempTowerVal" />
 
     <ToggleButton
         android:text="Fix temperature"
