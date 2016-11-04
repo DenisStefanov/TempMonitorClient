@@ -3,28 +3,17 @@ package org.duckdns.denis_st.tempmonitorclient;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Path;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.OvalShape;
-import android.graphics.drawable.shapes.PathShape;
-import android.graphics.drawable.shapes.RectShape;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.preference.PreferenceManager;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.ExpandableListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -36,22 +25,13 @@ import com.jcraft.jsch.Session;
 
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private GcmRegistrar tmgcm;
     private GcmIntentService tmgis;
-    private PowerManager.WakeLock wakeLock;
-    private String ServerIP;
-    private String user;
-    private String passwd;
-    private SharedPreferences.OnSharedPreferenceChangeListener prefListener;
     private String regid = null;
-    private String startSrvCmd, stopSrvCmd, configSrvCmd, configSrvGetCmd;
     private String stillTempThresholdText = "0.0";
     private String towerTempThresholdText = "0.0";
 
@@ -143,33 +123,12 @@ public class MainActivity extends AppCompatActivity {
                 }
     }
 
-    void getPrefs(SharedPreferences prefs) {
-        ServerIP = prefs.getString("ServerIP", null);
-        user = prefs.getString("user", null);
-        passwd = prefs.getString("passwd", null);
-        startSrvCmd = prefs.getString("startSrvCmd", null);
-        stopSrvCmd = prefs.getString("stopSrvCmd", null);
-        configSrvCmd = prefs.getString("configSrvCmd", null);
-        configSrvGetCmd = prefs.getString("configSrvGetCmd", null);
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
-        PreferenceManager.setDefaultValues(this, R.xml.pref_notification, false);
-
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        getPrefs(prefs);
-
-        prefListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
-            public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-                getPrefs(prefs);
-            }
-        };
-        prefs.registerOnSharedPreferenceChangeListener(prefListener);
-
+        PreferenceManager.setDefaultValues(this, R.xml.pref_general, true);
+        PreferenceManager.setDefaultValues(this, R.xml.pref_notification, true);
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -180,10 +139,6 @@ public class MainActivity extends AppCompatActivity {
         String Srvdata = tmgis.getData();
         if (Srvdata != null)
             updateScreen(Srvdata);
-
-        PowerManager pm;
-        pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakeLock = pm.newWakeLock(pm.SCREEN_BRIGHT_WAKE_LOCK, "My wakelock");
 
         tmgcm = new GcmRegistrar(getApplicationContext());
         // Check device for Play Services APK.
@@ -275,13 +230,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        wakeLock.acquire();
         super.onResume();
     }
 
     @Override
     protected void onPause() {
-        wakeLock.release();
         super.onPause();
     }
 
@@ -297,12 +250,20 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        final String ServerIP = prefs.getString("ServerIP", null);
+        final String user = prefs.getString("user", null);
+        final String passwd = prefs.getString("passwd", null);
+        final String startSrvCmd = prefs.getString("startSrvCmd", null);
+        final String stopSrvCmd = prefs.getString("stopSrvCmd", null);
+        final String configSrvCmd = prefs.getString("configSrvCmd", null);
+        final String configSrvGetCmd = prefs.getString("configSrvGetCmd", null);
+
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
@@ -350,9 +311,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if (id == R.id.action_configSrvGet) {
             final String params;
-
             params = "Conf1,fixtemp;Conf2,fixtemp;Conf1,absolute;Conf2,absolute";
-
             new Thread() {
                 @Override
                 public void run() {PerformServerCommand(configSrvGetCmd + " '" + params + "'", ServerIP, user, passwd, R.id.action_configSrvGet);}}.start();

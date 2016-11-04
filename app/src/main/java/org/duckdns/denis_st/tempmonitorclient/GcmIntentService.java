@@ -71,7 +71,6 @@ public class GcmIntentService extends IntentService {
                         Context ctx = getBaseContext();
 
                         Intent startIntent = new Intent(ctx, RingtonePlayingService.class);
-                        String s = prefs.getString("notifications_new_message_ringtone", "content://settings/system/notification_sound");
                         startIntent.putExtra("ringtone-uri", prefs.getString("notifications_new_message_ringtone", null));
                         ctx.startService(startIntent);
                     }
