@@ -23,8 +23,14 @@
         android:title="@string/action_stopSrv"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_showSrvLog"
+        android:id="@+id/action_configSrv"
         android:orderInCategory="100"
-        android:title="@string/action_showSrvLog"
+        android:title="@string/action_configSrv"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_configSrvGet"
+        android:orderInCategory="100"
+        android:title="@string/action_configSrvGet"
+        app:showAsAction="never" />
+
 </menu>

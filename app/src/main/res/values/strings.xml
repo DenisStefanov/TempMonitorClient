@@ -5,7 +5,8 @@
     <string name="action_updRegID">Update RegID</string>
     <string name="action_startSrv">Start Server</string>
     <string name="action_stopSrv">Stop Server</string>
-    <string name="action_showSrvLog">Show Server log</string>
+    <string name="action_configSrv">Upload config to the Server</string>
+    <string name="action_configSrvGet">Get config from the Server</string>
 
     <!-- Strings related to Settings -->
 
@@ -32,11 +33,11 @@
     <string name="pref_stopSrvCmd">sudo python /home/pi/TempMonitorServer/brew_tempc.py stop</string>
     <string name="pref_stopSrvTitle">Stop Tempmon service command</string>
 
-    <string name="pref_RegIDSrvFile">/tmp/regid.txt</string>
-    <string name="pref_RegIDSrvFileTitle">RegID server file name</string>
-    <string name="pref_getLogCmd">tail -n 10 /var/log/tempmon.log</string>
-    <string name="pref_getLogCmdTitle">Show Server log</string>
+    <string name="pref_configSrv">python /home/pi/TempMonitorServer/config.py set</string>
+    <string name="pref_configSrvTitle">Set Server config script run</string>
 
+    <string name="pref_configSrvGet">python /home/pi/TempMonitorServer/config.py get</string>
+    <string name="pref_configSrvGetTitle">Get Server config script run</string>
 
     <string name="pref_title_add_friends_to_messages">Add friends to messages</string>
     <string-array name="pref_example_list_titles">
@@ -90,7 +91,7 @@
     <!-- Example settings for Notifications -->
     <string name="pref_header_notifications">Notifications</string>
 
-    <string name="pref_title_new_message_notifications">New message notifications</string>
+    <string name="pref_title_new_message_notifications">Alarm notifications</string>
 
     <string name="pref_title_ringtone">Ringtone</string>
     <string name="pref_ringtone_silent">Silent</string>

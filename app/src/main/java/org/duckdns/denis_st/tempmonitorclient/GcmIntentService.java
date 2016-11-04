@@ -57,7 +57,7 @@ public class GcmIntentService extends IntentService {
 
 	private void processData(String type, String newdata){
 		try {
-			//System.out.println("Received = " + newdata + " Type = " + type);
+			System.out.println("Received = " + newdata + " Type = " + type);
 			data = newdata;
 			if (type.equals("alarma")) {
 				sendNotification("ALARMA: " + data);
