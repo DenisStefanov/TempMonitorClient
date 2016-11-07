@@ -33,4 +33,9 @@
         android:orderInCategory="100"
         android:title="@string/action_configSrvGet"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_portScan"
+        android:orderInCategory="100"
+        android:title="@string/action_portScanTitle"
+        app:showAsAction="never" />
 </menu>

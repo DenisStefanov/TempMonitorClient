@@ -33,13 +33,27 @@ public class MainActivity extends AppCompatActivity {
     private String regid = null;
     private String stillTempThresholdText = "0.0";
     private String towerTempThresholdText = "0.0";
+    private SharedPreferences prefs;
+    private SharedPreferences.OnSharedPreferenceChangeListener listener;
+
+    private void registerPreferenceListener()
+    {
+        listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+            public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+                if (key.equals("ServerData")) {
+                    updateScreen(prefs.getString(key, null));
+                }
+            }
+        };
+
+        prefs.registerOnSharedPreferenceChangeListener(listener);
+    }
 
     private void showToastinMain(final String text) {
         MainActivity.this.runOnUiThread(new Runnable() {
             public void run() {
                 Toast.makeText(MainActivity.this, text, Toast.LENGTH_LONG).show();}
         });
-
     }
 
     private void updateUIControlsInMain(final String result) {
@@ -69,8 +83,16 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 }
-                String Srvdata = tmgis.getData();
-                updateScreen(Srvdata);
+                //String Srvdata = tmgis.getData();
+                //updateScreen(Srvdata);
+
+                //SharedPreferences sp = getSharedPreferences("TempMonServerPrefs", Activity.MODE_PRIVATE);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString("stillTempThresholdText", StillTempFix.getText().toString());
+                editor.putString("towerTempThresholdText", TowerTempFix.getText().toString());
+                editor.putBoolean("stillToggleChecked", toggleStill.isChecked());
+                editor.putBoolean("towerToggleChecked", toggleTower.isChecked());
+                editor.commit();
             }
         });
     }
@@ -125,6 +147,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        registerPreferenceListener();
+
         PreferenceManager.setDefaultValues(this, R.xml.pref_general, true);
         PreferenceManager.setDefaultValues(this, R.xml.pref_notification, true);
 
@@ -132,12 +157,19 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
+        ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
+        TextView StillTempFix = (TextView)findViewById(R.id.editStillTempFix);
+        TextView TowerTempFix = (TextView)findViewById(R.id.editTowerTempFix);
+
+        toggleStill.setChecked(prefs.getBoolean("stillToggleChecked", false));
+        toggleTower.setChecked(prefs.getBoolean("towerToggleChecked", false));
+        StillTempFix.setText(prefs.getString("stillTempThresholdText", "0.0"));
+        TowerTempFix.setText(prefs.getString("towerTempThresholdText", "0.0"));
+        StillTempFix.setEnabled(!toggleStill.isChecked());
+        TowerTempFix.setEnabled(!toggleTower.isChecked());
+
         tmgis = new GcmIntentService();
-
-        String Srvdata = tmgis.getData();
-        if (Srvdata != null)
-            updateScreen(Srvdata);
-
         tmgcm = new GcmRegistrar(getApplicationContext());
         // Check device for Play Services APK.
         if (tmgcm.checkPlayServices(this)) {
@@ -153,46 +185,37 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_UP){
-                    String Srvdata = tmgis.getData();
+                    //String Srvdata = tmgis.getData();
                     //Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
-                    if (Srvdata != null)
-                        updateScreen(Srvdata);
+                    //if (Srvdata != null)
+                    //    updateScreen(Srvdata);
                 }
                 return true;
             }
         });
 
-        ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
         toggleStill.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 TextView StillTempFix = (TextView)findViewById(R.id.editStillTempFix);
-                if (isChecked) {
-                    StillTempFix.setEnabled(false);
-                    stillTempThresholdText = StillTempFix.getText().toString();
-                } else {
-                    StillTempFix.setEnabled(true);
-                }
-                String Srvdata = tmgis.getData();
-                if (Srvdata != null)
-                    updateScreen(Srvdata);
+                StillTempFix.setEnabled(!isChecked);
+                if (isChecked) stillTempThresholdText = StillTempFix.getText().toString();
+                //String Srvdata = tmgis.getData();
+                //if (Srvdata != null)
+                //    updateScreen(Srvdata);
             }
         });
-        ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
+
         toggleTower.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 TextView TowerTempFix = (TextView)findViewById(R.id.editTowerTempFix);
-                if (isChecked) {
-                    TowerTempFix.setEnabled(false);
-                    towerTempThresholdText = TowerTempFix.getText().toString();
-                } else {
-                    TowerTempFix.setEnabled(true);
-                }
-                String Srvdata = tmgis.getData();
-                if (Srvdata != null)
-                    updateScreen(Srvdata);
-
+                TowerTempFix.setEnabled(!isChecked);
+                if (isChecked) towerTempThresholdText = TowerTempFix.getText().toString();
+                //String Srvdata = tmgis.getData();
+                //if (Srvdata != null)
+                //    updateScreen(Srvdata);
             }
         });
+
     }
 
     private void updateScreen(String Srvdata){
@@ -253,7 +276,8 @@ public class MainActivity extends AppCompatActivity {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+        //SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         final String ServerIP = prefs.getString("ServerIP", null);
         final String user = prefs.getString("user", null);
         final String passwd = prefs.getString("passwd", null);
@@ -302,6 +326,13 @@ public class MainActivity extends AppCompatActivity {
             params1 = toggleTower.isChecked()?"Conf2,fixtemp,yes;":"Conf2,fixtemp,no;";
             params2 = "Conf1,absolute," + StillTempFix.getText().toString() + ";"+ "Conf2,absolute," + TowerTempFix.getText().toString();
 
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString("stillTempThresholdText", StillTempFix.getText().toString());
+            editor.putString("towerTempThresholdText", TowerTempFix.getText().toString());
+            editor.putBoolean("stillToggleChecked", toggleStill.isChecked());
+            editor.putBoolean("towerToggleChecked", toggleTower.isChecked());
+            editor.commit();
+
             new Thread() {
                 @Override
                 public void run() {PerformServerCommand(configSrvCmd + " '" + params + params1 + params2 + "'", ServerIP, user, passwd, R.id.action_configSrv);}}.start();
@@ -315,6 +346,12 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {PerformServerCommand(configSrvGetCmd + " '" + params + "'", ServerIP, user, passwd, R.id.action_configSrvGet);}}.start();
             return true;
         }
+        if (id == R.id.action_portScan) {
+            Intent intent = new Intent(this, PortScanActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 }

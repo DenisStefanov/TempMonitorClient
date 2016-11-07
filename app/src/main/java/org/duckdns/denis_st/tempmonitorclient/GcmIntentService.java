@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
+import android.app.Activity;
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -58,11 +59,15 @@ public class GcmIntentService extends IntentService {
 	private void processData(String type, String newdata){
 		try {
 			System.out.println("Received = " + newdata + " Type = " + type);
-			data = newdata;
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString("ServerData", newdata);
+            editor.commit();
+
+            data = newdata;
 			if (type.equals("alarma")) {
 				sendNotification("ALARMA: " + data);
 				try {
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
                     if (prefs.getBoolean("notifications_new_message", true)) {
                         if (prefs.getBoolean("notifications_new_message_vibrate", true)) {
                             Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -95,7 +100,7 @@ public class GcmIntentService extends IntentService {
 		.setStyle(new NotificationCompat.BigTextStyle()
 		.bigText(msg))
 		.setAutoCancel(true)
-		.setContentText("Content");
+		.setContentText(msg);
 
 		mBuilder.setContentIntent(contentIntent);
 		mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
