@@ -1,10 +1,12 @@
 package org.duckdns.denis_st.tempmonitorclient;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.android.gms.nearby.messages.Strategy;
 
 import android.app.Activity;
 import android.app.IntentService;
@@ -49,8 +51,7 @@ public class GcmIntentService extends IntentService {
 		if (!extras.isEmpty()) {
 			if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
 				processData(extras.getString("type"), extras.getString("data"));
-				//Log.i(TAG, "Received: " + extras.toString());
-			}
+     		}
 		}
 		// Release the wake lock provided by the WakefulBroadcastReceiver.
 		GcmBroadcastReceiver.completeWakefulIntent(intent);
@@ -81,9 +82,7 @@ public class GcmIntentService extends IntentService {
                     }
 				} catch (Exception e) {e.printStackTrace();}
 			}
-		}catch (Exception e) {
-			e.printStackTrace();
-		}
+		} catch (Exception e) {e.printStackTrace();}
 	}
 
 	private void sendNotification(String msg) {
@@ -105,5 +104,4 @@ public class GcmIntentService extends IntentService {
 		mBuilder.setContentIntent(contentIntent);
 		mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
 	}
-	
 }

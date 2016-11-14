@@ -12,9 +12,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
-
 import org.apache.http.conn.util.InetAddressUtils;
-
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
@@ -39,44 +37,43 @@ public class PortScanActivity extends AppCompatActivity {
 
         @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_port_scan);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_port_scan);
+            Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+            setSupportActionBar(toolbar);
 
-        prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        final ListView scanList = (ListView) findViewById(R.id.scan_list);
+            prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            final ListView scanList = (ListView) findViewById(R.id.scan_list);
 
-        scanListvalues = new ArrayList<String>();
-        adapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, android.R.id.text1, scanListvalues);
-        scanList.setAdapter(adapter);
+            scanListvalues = new ArrayList<String>();
+            adapter = new ArrayAdapter<String>(this,
+                    android.R.layout.simple_list_item_1, android.R.id.text1, scanListvalues);
+            scanList.setAdapter(adapter);
 
-        scanList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                String  ServerIP  = (String) scanList.getItemAtPosition(position);
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString("ServerIP", ServerIP);
-                editor.commit();
-                Toast.makeText(PortScanActivity.this, "Server IP configured to " + ServerIP, Toast.LENGTH_LONG).show();
-            }
+            scanList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view,
+                                        int position, long id) {
+                    String ServerIP = (String) scanList.getItemAtPosition(position);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString("ServerIP", ServerIP);
+                    editor.commit();
+                    Toast.makeText(PortScanActivity.this, "Server IP configured to " + ServerIP, Toast.LENGTH_LONG).show();
+                }
+            });
 
-        });
+            progressBar = new ProgressDialog(this);
+            progressBar.setCancelable(false);
+            progressBar.setMessage("Scanning network ...");
+            progressBar.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            progressBar.setProgress(0);
+            progressBar.setMax(255);
+            progressBar.show();
 
-        progressBar = new ProgressDialog(this);
-        progressBar.setCancelable(true);
-        progressBar.setMessage("Scanning network ...");
-        progressBar.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        progressBar.setProgress(0);
-        progressBar.setMax(255);
-        progressBar.show();
-
-        new Thread() {
-            @Override
-            public void run() {ScanMyNet(22, 200);}}.start();
-    }
+            new Thread() {
+                @Override
+                public void run() {ScanMyNet(22, 200);}}.start();
+        }
 
     private boolean ScanMyNet(int port, int timeout) {
         try {

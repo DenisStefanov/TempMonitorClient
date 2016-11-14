@@ -17,11 +17,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -133,6 +135,15 @@ public class MainActivity extends AppCompatActivity {
             showToastinMain(e.toString());
         }
         return;
+    }
+
+    private void sendToServer(Bundle data){
+        GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(MainActivity.this);
+        try {
+            gcm.send("620914624750" + "@gcm.googleapis.com", Calendar.getInstance().getTime().toString(), data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void GCMRegister() {
@@ -294,25 +305,40 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_updRegID) {
+            final Bundle data = new Bundle();
+            data.putString("message_type", "StoreRegid");
             if (regid.isEmpty()) {
                 showToastinMain("RegID is empty. Will not update Server");
                 return false;
             }
             new Thread() {
                 @Override
-                public void run() {PerformServerCommand(configSrvCmd + " 'Common,regid,"  + regid + "'", ServerIP, user, passwd, R.id.action_updRegID);}}.start();
+                public void run() {
+                    sendToServer(data);
+                }
+            }.start();
             return true;
         }
         if (id == R.id.action_startSrv) {
+            final Bundle data = new Bundle();
+            data.putString("message_type", "StartServer");
             new Thread() {
                 @Override
-                public void run() {PerformServerCommand(startSrvCmd, ServerIP, user, passwd, R.id.action_startSrv);}}.start();
+                public void run() {
+                    sendToServer(data);
+                }
+            }.start();
             return true;
         }
         if (id == R.id.action_stopSrv) {
+            final Bundle data = new Bundle();
+            data.putString("message_type", "StopServer");
             new Thread() {
                 @Override
-                public void run() {PerformServerCommand(stopSrvCmd, ServerIP, user, passwd,R.id.action_stopSrv);}}.start();
+                public void run() {
+                    sendToServer(data);
+                }
+            }.start();
             return true;
         }
         if (id == R.id.action_configSrv) {
