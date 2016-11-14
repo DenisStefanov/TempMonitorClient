@@ -1,42 +1,24 @@
 package org.duckdns.denis_st.tempmonitorclient;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.google.android.gms.nearby.messages.Strategy;
-
-import android.app.Activity;
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
+import android.widget.Toast;
 
 public class GcmIntentService extends IntentService {
 	public static final int NOTIFICATION_ID = 1;
 	private static final String TAG = "GcmIntentService";
 	private NotificationManager mNotificationManager;
 	private static String data = null;
-		
-	public String getData(){
-		System.out.println("returning datalist");	
-		return data;
-	}
-	
+
 	public GcmIntentService() {
 		super("GcmIntentService");		
 	}
@@ -60,13 +42,19 @@ public class GcmIntentService extends IntentService {
 	private void processData(String type, String newdata){
 		try {
 			System.out.println("Received = " + newdata + " Type = " + type);
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString("ServerData", newdata);
-            editor.commit();
-
+			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
             data = newdata;
-			if (type.equals("alarma")) {
+			if (type.equals("upd")) {
+				SharedPreferences.Editor editor = prefs.edit();
+				editor.putString("ServerData", newdata);
+				editor.commit();
+
+			}
+			else if (type.equals("alarma")) {
+				SharedPreferences.Editor editor = prefs.edit();
+				editor.putString("ServerData", newdata);
+				editor.commit();
+
 				sendNotification("ALARMA: " + data);
 				try {
                     if (prefs.getBoolean("notifications_new_message", true)) {
@@ -81,6 +69,15 @@ public class GcmIntentService extends IntentService {
                         ctx.startService(startIntent);
                     }
 				} catch (Exception e) {e.printStackTrace();}
+			}
+			else if (type.equals("configUpdated")){
+				SharedPreferences.Editor editor = prefs.edit();
+				editor.putString("ServerConfig", data);
+				editor.commit();
+				sendNotification("Server config updated");
+			}
+			else if (type.equals("Notify")){
+				sendNotification(data);
 			}
 		} catch (Exception e) {e.printStackTrace();}
 	}

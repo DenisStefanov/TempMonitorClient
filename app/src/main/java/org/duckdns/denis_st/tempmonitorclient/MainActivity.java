@@ -18,13 +18,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.jcraft.jsch.Channel;
-import com.jcraft.jsch.ChannelExec;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.Session;
-
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -45,6 +39,10 @@ public class MainActivity extends AppCompatActivity {
                 if (key.equals("ServerData")) {
                     updateScreen(prefs.getString(key, null));
                 }
+                else if (key.equals("ServerConfig")) {
+                    updateUIControlsInMain(prefs.getString(key, null));
+                }
+
             }
         };
 
@@ -97,44 +95,6 @@ public class MainActivity extends AppCompatActivity {
                 editor.commit();
             }
         });
-    }
-
-    private void PerformServerCommand(String command, String host, String user, String pwd, Integer cmdtype){
-        String result = "";
-        try{
-            JSch jsch=new JSch();
-            Session session=jsch.getSession(user, host, 22);
-            session.setPassword(pwd);
-            session.setConfig("StrictHostKeyChecking", "no");
-            session.connect(5000); // making a connection with timeout.
-            Channel channel=session.openChannel("exec");
-            InputStream in=channel.getInputStream();
-            //((ChannelExec)channel).setErrStream(System.err);
-            ((ChannelExec)channel).setCommand(command);
-            channel.connect(5000);
-
-            byte[] tmp=new byte[1024];
-            while(true) {
-                int i=in.read(tmp, 0, 1024);
-                if(i<0)break;
-                result = result + new String(tmp, 0, i);
-            }
-            showToastinMain(result);
-            System.out.println("host response: " + result);
-            System.out.println("exit-status: " + channel.getExitStatus());
-            Thread.sleep(500);
-            channel.disconnect();
-            session.disconnect();
-            if (cmdtype == R.id.action_configSrvGet) {
-                if (!result.isEmpty())
-                    updateUIControlsInMain(result);
-            }
-        }
-        catch(Exception e){
-            System.out.println(e);
-            showToastinMain(e.toString());
-        }
-        return;
     }
 
     private void sendToServer(Bundle data){
@@ -288,15 +248,6 @@ public class MainActivity extends AppCompatActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
 
-        //SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        final String ServerIP = prefs.getString("ServerIP", null);
-        final String user = prefs.getString("user", null);
-        final String passwd = prefs.getString("passwd", null);
-        final String startSrvCmd = prefs.getString("startSrvCmd", null);
-        final String stopSrvCmd = prefs.getString("stopSrvCmd", null);
-        final String configSrvCmd = prefs.getString("configSrvCmd", null);
-        final String configSrvGetCmd = prefs.getString("configSrvGetCmd", null);
-
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
@@ -342,15 +293,10 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_configSrv) {
-            final String params, params1, params2;
             TextView StillTempFix = (TextView)findViewById(R.id.editStillTempFix);
             ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
             TextView TowerTempFix = (TextView)findViewById(R.id.editTowerTempFix);
             ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
-
-            params = toggleStill.isChecked()?"Conf1,fixtemp,yes;":"Conf1,fixtemp,no;";
-            params1 = toggleTower.isChecked()?"Conf2,fixtemp,yes;":"Conf2,fixtemp,no;";
-            params2 = "Conf1,absolute," + StillTempFix.getText().toString() + ";"+ "Conf2,absolute," + TowerTempFix.getText().toString();
 
             SharedPreferences.Editor editor = prefs.edit();
             editor.putString("stillTempThresholdText", StillTempFix.getText().toString());
@@ -359,17 +305,30 @@ public class MainActivity extends AppCompatActivity {
             editor.putBoolean("towerToggleChecked", toggleTower.isChecked());
             editor.commit();
 
+            final Bundle data = new Bundle();
+            data.putString("message_type", "ReconfigServer");
+            data.putString("Conf1", toggleStill.isChecked()?"fixtemp,yes;":"fixtemp,no;");
+            data.putString("Conf1", "absolute," + StillTempFix.getText().toString());
+            data.putString("Conf2", toggleTower.isChecked()?"fixtemp,yes;":"fixtemp,no;");
+            data.putString("Conf2", "absolute," + TowerTempFix.getText().toString());
             new Thread() {
                 @Override
-                public void run() {PerformServerCommand(configSrvCmd + " '" + params + params1 + params2 + "'", ServerIP, user, passwd, R.id.action_configSrv);}}.start();
+                public void run() {
+                    sendToServer(data);
+                }
+            }.start();
+
             return true;
         }
         if (id == R.id.action_configSrvGet) {
-            final String params;
-            params = "Conf1,fixtemp;Conf2,fixtemp;Conf1,absolute;Conf2,absolute";
+            final Bundle data = new Bundle();
+            data.putString("message_type", "ConfigServerGet");
             new Thread() {
                 @Override
-                public void run() {PerformServerCommand(configSrvGetCmd + " '" + params + "'", ServerIP, user, passwd, R.id.action_configSrvGet);}}.start();
+                public void run() {
+                    sendToServer(data);
+                }
+            }.start();
             return true;
         }
         if (id == R.id.action_portScan) {
