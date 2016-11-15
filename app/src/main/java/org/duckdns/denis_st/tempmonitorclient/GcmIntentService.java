@@ -11,13 +11,11 @@ import android.os.Bundle;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
-import android.widget.Toast;
 
 public class GcmIntentService extends IntentService {
 	public static final int NOTIFICATION_ID = 1;
 	private static final String TAG = "GcmIntentService";
 	private NotificationManager mNotificationManager;
-	private static String data = null;
 
 	public GcmIntentService() {
 		super("GcmIntentService");		
@@ -32,30 +30,28 @@ public class GcmIntentService extends IntentService {
 
 		if (!extras.isEmpty()) {
 			if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
-				processData(extras.getString("type"), extras.getString("data"));
+				processData(extras);
      		}
 		}
 		// Release the wake lock provided by the WakefulBroadcastReceiver.
 		GcmBroadcastReceiver.completeWakefulIntent(intent);
 	}
 
-	private void processData(String type, String newdata){
+	private void processData(Bundle extras){
 		try {
-			System.out.println("Received = " + newdata + " Type = " + type);
-			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-            data = newdata;
-			if (type.equals("upd")) {
-				SharedPreferences.Editor editor = prefs.edit();
-				editor.putString("ServerData", newdata);
+            String type = extras.getString("type", null);
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+			if (type.equals("upd") || type.equals("alarma")) {
+                String time = extras.getString("time", null);
+                String tempStill = extras.getString("tempStill", null);
+                String tempTower = extras.getString("tempTower", null);
+                String data = time + "," + tempStill + "," + tempTower;
+                SharedPreferences.Editor editor = prefs.edit();
+				editor.putString("ServerData", data);
 				editor.commit();
-
 			}
-			else if (type.equals("alarma")) {
-				SharedPreferences.Editor editor = prefs.edit();
-				editor.putString("ServerData", newdata);
-				editor.commit();
-
-				sendNotification("ALARMA: " + data);
+			if (type.equals("alarma")) {
+				sendNotification("ALARMA");
 				try {
                     if (prefs.getBoolean("notifications_new_message", true)) {
                         if (prefs.getBoolean("notifications_new_message_vibrate", true)) {
@@ -70,15 +66,13 @@ public class GcmIntentService extends IntentService {
                     }
 				} catch (Exception e) {e.printStackTrace();}
 			}
-			else if (type.equals("configUpdated")){
-				SharedPreferences.Editor editor = prefs.edit();
-				editor.putString("ServerConfig", data);
-				editor.commit();
-				sendNotification("Server config updated");
+			if (type.equals("Notify")){
+				sendNotification(extras.getString("note", null));
 			}
-			else if (type.equals("Notify")){
-				sendNotification(data);
-			}
+            if (type.equals("ServerConfig")){
+                //
+            }
+
 		} catch (Exception e) {e.printStackTrace();}
 	}
 
@@ -92,7 +86,7 @@ public class GcmIntentService extends IntentService {
 		NotificationCompat.Builder mBuilder =
 				new NotificationCompat.Builder(this)
 		.setSmallIcon(R.drawable.iconsmall)
-		.setContentTitle("TempMon GCM Notification")
+		.setContentTitle("TempMonitorClient")
 		.setStyle(new NotificationCompat.BigTextStyle()
 		.bigText(msg))
 		.setAutoCancel(true)
