@@ -42,14 +42,12 @@ public class GcmIntentService extends IntentService {
             String type = extras.getString("type", null);
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 			if (type.equals("upd") || type.equals("alarma")) {
-                String time = extras.getString("time", null);
-                String tempStill = extras.getString("tempStill", null);
-                String tempTower = extras.getString("tempTower", null);
-                String data = time + "," + tempStill + "," + tempTower;
                 SharedPreferences.Editor editor = prefs.edit();
-				editor.putString("ServerData", data);
+				editor.putString("LastUpdated", extras.getString("LastUpdated", null));
+				editor.putString("stillTemp", extras.getString("stillTemp", null));
+				editor.putString("towerTemp", extras.getString("towerTemp", null));
+                editor.putBoolean("ScreenInfoValid", false);
 				editor.commit();
-                //System.out.println("Received type =" + type + " " + tempStill + " " + tempTower );
             }
             if (type.equals("alarma")) {
 				sendNotification("ALARMA");
@@ -71,8 +69,12 @@ public class GcmIntentService extends IntentService {
 				sendNotification(extras.getString("note", null));
 			}
             if (type.equals("ServerConfig")){
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString("ServerConfig", extras.getString("Config"));
+				SharedPreferences.Editor editor = prefs.edit();
+				editor.putString("stillTempThreshold", extras.getString("stillTemp", null));
+				editor.putString("towerTempThreshold", extras.getString("towerTemp", null));
+				editor.putBoolean("stillToggleChecked", extras.getBoolean("stillToggle", false));
+				editor.putBoolean("towerToggleChecked", extras.getBoolean("towerToggle", false));
+                editor.putBoolean("ScreenInfoValid", false);
 				editor.commit();
 			}
 
