@@ -49,8 +49,9 @@ public class GcmIntentService extends IntentService {
                 SharedPreferences.Editor editor = prefs.edit();
 				editor.putString("ServerData", data);
 				editor.commit();
-			}
-			if (type.equals("alarma")) {
+                //System.out.println("Received type =" + type + " " + tempStill + " " + tempTower );
+            }
+            if (type.equals("alarma")) {
 				sendNotification("ALARMA");
 				try {
                     if (prefs.getBoolean("notifications_new_message", true)) {
@@ -70,8 +71,10 @@ public class GcmIntentService extends IntentService {
 				sendNotification(extras.getString("note", null));
 			}
             if (type.equals("ServerConfig")){
-                //
-            }
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString("ServerConfig", extras.getString("Config"));
+				editor.commit();
+			}
 
 		} catch (Exception e) {e.printStackTrace();}
 	}
@@ -91,7 +94,6 @@ public class GcmIntentService extends IntentService {
 		.bigText(msg))
 		.setAutoCancel(true)
 		.setContentText(msg);
-
 		mBuilder.setContentIntent(contentIntent);
 		mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
 	}

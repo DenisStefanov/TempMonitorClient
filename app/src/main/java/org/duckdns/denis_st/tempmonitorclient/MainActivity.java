@@ -37,15 +37,14 @@ public class MainActivity extends AppCompatActivity {
         listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
                 if (key.equals("ServerData")) {
-                    updateScreen(prefs.getString(key, null));
+                    updateCurrentReadings(prefs.getString(key, null));
                 }
                 else if (key.equals("ServerConfig")) {
-                    updateUIControlsInMain(prefs.getString(key, null));
+                    updateServerLimits(prefs.getString(key, null));
                 }
 
             }
         };
-
         prefs.registerOnSharedPreferenceChangeListener(listener);
     }
 
@@ -56,45 +55,65 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void updateUIControlsInMain(final String result) {
-        MainActivity.this.runOnUiThread(new Runnable() {
-            public void run() {
-                TextView StillTempFix = (TextView) findViewById(R.id.editStillTempFix);
-                TextView TowerTempFix = (TextView) findViewById(R.id.editTowerTempFix);
-                ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
-                ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
-                for (String configEl : result.split(";")) {
-                    if (configEl.split(",")[0].equals("Conf1")) {
-                        if (configEl.split(",")[1].equals("fixtemp")) {
-                            toggleStill.setChecked(configEl.split(",")[2].equals("yes"));
-                        }
-                        if (configEl.split(",")[1].equals("absolute")) {
-                            StillTempFix.setText(configEl.split(",")[2]);
-                            stillTempThresholdText = StillTempFix.getText().toString();
-                        }
-                    }
-                    if (configEl.split(",")[0].equals("Conf2")) {
-                        if (configEl.split(",")[1].equals("fixtemp")) {
-                            toggleTower.setChecked(configEl.split(",")[2].equals("yes"));
-                        }
-                        if (configEl.split(",")[1].equals("absolute")) {
-                            TowerTempFix.setText(configEl.split(",")[2]);
-                            towerTempThresholdText = TowerTempFix.getText().toString();
-                        }
-                    }
-                }
-                //String Srvdata = tmgis.getData();
-                //updateScreen(Srvdata);
+    private void updateCurrentReadings(String Srvdata){
+        try {
+            String srvDateText = Srvdata.split(",")[0];
+            Date srvDate = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(srvDateText);
+            String stillTempText = Srvdata.split(",")[1];
+            String towerTempText = Srvdata.split(",")[2];
 
-                //SharedPreferences sp = getSharedPreferences("TempMonServerPrefs", Activity.MODE_PRIVATE);
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString("stillTempThresholdText", StillTempFix.getText().toString());
-                editor.putString("towerTempThresholdText", TowerTempFix.getText().toString());
-                editor.putBoolean("stillToggleChecked", toggleStill.isChecked());
-                editor.putBoolean("towerToggleChecked", toggleTower.isChecked());
-                editor.commit();
+            ViewGroup myLayout = (ViewGroup) findViewById(R.id.include);
+
+            DrawView drawView = new DrawView(this, stillTempText, stillTempThresholdText, towerTempText, towerTempThresholdText);
+            myLayout.addView(drawView);
+
+            Date nowDate = Calendar.getInstance().getTime();
+            long diffSec = Math.abs(srvDate.getTime() - nowDate.getTime()) / 1000;
+            long diffMin = diffSec/60;
+
+            TextView LastUpd = (TextView)findViewById(R.id.lastupdate);
+            LastUpd.setText(srvDateText + " (" + String.valueOf(diffMin) + ":" + String.valueOf(diffSec) + " ago)");
+            TextView TowerTemp = (TextView)findViewById(R.id.tempTowerVal);
+            TowerTemp.setText(towerTempText);
+            TextView StillTemp = (TextView)findViewById(R.id.tempStillVal);
+            StillTemp.setText(stillTempText);
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateServerLimits(String data) {
+        TextView StillTempFix = (TextView) findViewById(R.id.editStillTempFix);
+        TextView TowerTempFix = (TextView) findViewById(R.id.editTowerTempFix);
+        ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
+        ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
+        for (String configEl : data.split(";")) {
+            if (configEl.split(",")[0].equals("Conf1")) {
+                if (configEl.split(",")[1].equals("fixtemp")) {
+                    toggleStill.setChecked(configEl.split(",")[2].equals("yes"));
+                }
+                if (configEl.split(",")[1].equals("absolute")) {
+                    StillTempFix.setText(configEl.split(",")[2]);
+                    stillTempThresholdText = StillTempFix.getText().toString();
+                }
             }
-        });
+            if (configEl.split(",")[0].equals("Conf2")) {
+                if (configEl.split(",")[1].equals("fixtemp")) {
+                    toggleTower.setChecked(configEl.split(",")[2].equals("yes"));
+                }
+                if (configEl.split(",")[1].equals("absolute")) {
+                    TowerTempFix.setText(configEl.split(",")[2]);
+                    towerTempThresholdText = TowerTempFix.getText().toString();
+                }
+            }
+        }
+
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("stillTempThresholdText", StillTempFix.getText().toString());
+        editor.putString("towerTempThresholdText", TowerTempFix.getText().toString());
+        editor.putBoolean("stillToggleChecked", toggleStill.isChecked());
+        editor.putBoolean("towerToggleChecked", toggleTower.isChecked());
+        editor.commit();
     }
 
     private void sendToServer(Bundle data){
@@ -156,10 +175,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_UP){
-                    //String Srvdata = tmgis.getData();
-                    //Srvdata = "Sun Oct 30 21:05:39 2016,23.375,22.937";
-                    //if (Srvdata != null)
-                    //    updateScreen(Srvdata);
+                    //TODO
                 }
                 return true;
             }
@@ -170,9 +186,6 @@ public class MainActivity extends AppCompatActivity {
                 TextView StillTempFix = (TextView)findViewById(R.id.editStillTempFix);
                 StillTempFix.setEnabled(!isChecked);
                 if (isChecked) stillTempThresholdText = StillTempFix.getText().toString();
-                //String Srvdata = tmgis.getData();
-                //if (Srvdata != null)
-                //    updateScreen(Srvdata);
             }
         });
 
@@ -181,43 +194,9 @@ public class MainActivity extends AppCompatActivity {
                 TextView TowerTempFix = (TextView)findViewById(R.id.editTowerTempFix);
                 TowerTempFix.setEnabled(!isChecked);
                 if (isChecked) towerTempThresholdText = TowerTempFix.getText().toString();
-                //String Srvdata = tmgis.getData();
-                //if (Srvdata != null)
-                //    updateScreen(Srvdata);
             }
         });
 
-    }
-
-    private void updateScreen(String Srvdata){
-        try {
-            String srvDateText = Srvdata.split(",")[0];
-            Date srvDate = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(srvDateText);
-            String stillTempText = Srvdata.split(",")[1];
-            String towerTempText = Srvdata.split(",")[2];
-
-            Context ctx = getBaseContext();
-            Intent stopIntent = new Intent(ctx, RingtonePlayingService.class);
-            ctx.stopService(stopIntent);
-
-            ViewGroup myLayout = (ViewGroup) findViewById(R.id.include);
-
-            DrawView drawView = new DrawView(this, stillTempText, stillTempThresholdText, towerTempText, towerTempThresholdText);
-            myLayout.addView(drawView);
-
-            Date nowDate = Calendar.getInstance().getTime();
-            long diffSec = Math.abs(srvDate.getTime() - nowDate.getTime()) / 1000;
-            long diffMin = diffSec/60;
-
-            TextView LastUpd = (TextView)findViewById(R.id.lastupdate);
-            LastUpd.setText(srvDateText + " (" + String.valueOf(diffMin) + ":" + String.valueOf(diffSec) + " ago)");
-            TextView TowerTemp = (TextView)findViewById(R.id.tempTowerVal);
-            TowerTemp.setText(towerTempText);
-            TextView StillTemp = (TextView)findViewById(R.id.tempStillVal);
-            StillTemp.setText(stillTempText);
-    }catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @Override

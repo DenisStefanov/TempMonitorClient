@@ -7,6 +7,9 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.IBinder;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class RingtonePlayingService extends Service
 {
     private Ringtone ringtone;
@@ -25,6 +28,14 @@ public class RingtonePlayingService extends Service
         this.ringtone = RingtoneManager.getRingtone(this, ringtoneUri);
         ringtone.play();
 
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                ringtone.stop();
+            }
+        };
+        Timer timer = new Timer();
+        timer.schedule(task, 5000);
         return START_NOT_STICKY;
     }
 
