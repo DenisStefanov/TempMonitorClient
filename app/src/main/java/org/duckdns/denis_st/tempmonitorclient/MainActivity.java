@@ -21,10 +21,10 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     private GcmRegistrar tmgcm;
-    //private GcmIntentService tmgis;
     private String regid = null;
     private SharedPreferences prefs;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
@@ -59,18 +59,19 @@ public class MainActivity extends AppCompatActivity {
             ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
             ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
 
+            String stillTempThreshold = prefs.getString("stillTempThreshold", "0.0");
+            String towerTempThreshold = prefs.getString("towerTempThreshold", "0.0");
+
             toggleStill.setChecked(prefs.getBoolean("stillToggleChecked", false));
             toggleTower.setChecked(prefs.getBoolean("towerToggleChecked", false));
-            StillTempFix.setText(prefs.getString("stillTempThreshold", "0.0"));
-            TowerTempFix.setText(prefs.getString("towerTempThreshold", "0.0"));
+            StillTempFix.setText(stillTempThreshold);
+            TowerTempFix.setText(towerTempThreshold);
 
             //Updating current readings
             Date nowDate = Calendar.getInstance().getTime();
             Date srvDate = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(prefs.getString("LastUpdated", "Fri Jan 01 00:00:00 2016"));
             String stillTemp = prefs.getString("stillTemp", "0.0");
             String towerTemp = prefs.getString("towerTemp", "0.0");
-            String stillTempThreshold = prefs.getString("stillTempThreshold", "0.0");
-            String towerTempThreshold = prefs.getString("towerTempThreshold", "0.0");
 
             ViewGroup myLayout = (ViewGroup) findViewById(R.id.include);
             DrawView drawView = new DrawView(this, stillTemp, stillTempThreshold, towerTemp, towerTempThreshold);
@@ -91,10 +92,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private String rndId() {
+        char[] chars = "abcdefghijklmnopqrstuvwxyz".toCharArray();
+        StringBuilder sb = new StringBuilder();
+        Random random = new Random();
+        for (int i = 0; i < 8; i++) {
+            char c = chars[random.nextInt(chars.length)];
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
     private void sendToServer(Bundle data){
         GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(MainActivity.this);
         try {
-            gcm.send("620914624750" + "@gcm.googleapis.com", Calendar.getInstance().getTime().toString(), data);
+            gcm.send("620914624750" + "@gcm.googleapis.com", rndId(), data);
             System.out.println(data);
         } catch (IOException e) {
             e.printStackTrace();
@@ -135,7 +147,6 @@ public class MainActivity extends AppCompatActivity {
         StillTempFix.setEnabled(!toggleStill.isChecked());
         TowerTempFix.setEnabled(!toggleTower.isChecked());
 
-        //tmgis = new GcmIntentService();
         tmgcm = new GcmRegistrar(getApplicationContext());
         // Check device for Play Services APK.
         if (tmgcm.checkPlayServices(this)) {
@@ -260,6 +271,13 @@ public class MainActivity extends AppCompatActivity {
             Data.putString("absoluteStill", prefs.getString("stillTempThreshold", "0.0"));
             Data.putString("fixtempTower", String.valueOf(prefs.getBoolean("towerToggleChecked", false)));
             Data.putString("absoluteTower", prefs.getString("towerTempThreshold", "0.0"));
+
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString("stillTempThreshold", Data.getString("stillTempThreshold", "0.0"));
+            editor.putString("towerTempThreshold", Data.getString("towerTempThreshold", "0.0"));
+            editor.putBoolean("stillToggleChecked", Boolean.valueOf(Data.getString("stillToggle", null)));
+            editor.putBoolean("towerToggleChecked", Boolean.valueOf(Data.getString("towerToggle", null)));
+            editor.commit();
 
             new Thread() {
                 @Override
