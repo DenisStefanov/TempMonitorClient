@@ -1,5 +1,6 @@
 package org.duckdns.denis_st.tempmonitorclient;
 
+import com.google.android.gms.common.api.BooleanResult;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import android.app.IntentService;
 import android.app.NotificationManager;
@@ -44,8 +45,8 @@ public class GcmIntentService extends IntentService {
 			if (type.equals("upd") || type.equals("alarma")) {
                 SharedPreferences.Editor editor = prefs.edit();
 				editor.putString("LastUpdated", extras.getString("LastUpdated", null));
-				editor.putString("stillTemp", extras.getString("stillTemp", null));
-				editor.putString("towerTemp", extras.getString("towerTemp", null));
+				editor.putString("stillTemp", extras.getString("tempStill", "0.0"));
+				editor.putString("towerTemp", extras.getString("tempTower", "0.0"));
                 editor.putBoolean("ScreenInfoValid", false);
 				editor.commit();
             }
@@ -70,10 +71,10 @@ public class GcmIntentService extends IntentService {
 			}
             if (type.equals("ServerConfig")){
 				SharedPreferences.Editor editor = prefs.edit();
-				editor.putString("stillTempThreshold", extras.getString("stillTemp", null));
-				editor.putString("towerTempThreshold", extras.getString("towerTemp", null));
-				editor.putBoolean("stillToggleChecked", extras.getBoolean("stillToggle", false));
-				editor.putBoolean("towerToggleChecked", extras.getBoolean("towerToggle", false));
+				editor.putString("stillTempThreshold", extras.getString("stillTempThreshold", "0.0"));
+				editor.putString("towerTempThreshold", extras.getString("towerTempThreshold", "0.0"));
+				editor.putBoolean("stillToggleChecked", Boolean.valueOf(extras.getString("stillToggle", null)));
+				editor.putBoolean("towerToggleChecked", Boolean.valueOf(extras.getString("towerToggle", null)));
                 editor.putBoolean("ScreenInfoValid", false);
 				editor.commit();
 			}

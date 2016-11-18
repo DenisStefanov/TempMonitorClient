@@ -59,31 +59,33 @@ public class MainActivity extends AppCompatActivity {
             ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
             ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
 
-            toggleStill.setChecked(prefs.getBoolean("stillToggle", false));
-            toggleTower.setChecked(prefs.getBoolean("towerToggle", false));
+            toggleStill.setChecked(prefs.getBoolean("stillToggleChecked", false));
+            toggleTower.setChecked(prefs.getBoolean("towerToggleChecked", false));
             StillTempFix.setText(prefs.getString("stillTempThreshold", "0.0"));
             TowerTempFix.setText(prefs.getString("towerTempThreshold", "0.0"));
 
             //Updating current readings
-            Date srvDate = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(prefs.getString("LastUpdated", null));
-            String stillTempText = prefs.getString("stillTemp", null);
-            String towerTempText = prefs.getString("towerTemp", null);
+            Date nowDate = Calendar.getInstance().getTime();
+            Date srvDate = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(prefs.getString("LastUpdated", "Fri Jan 01 00:00:00 2016"));
+            String stillTemp = prefs.getString("stillTemp", "0.0");
+            String towerTemp = prefs.getString("towerTemp", "0.0");
+            String stillTempThreshold = prefs.getString("stillTempThreshold", "0.0");
+            String towerTempThreshold = prefs.getString("towerTempThreshold", "0.0");
 
             ViewGroup myLayout = (ViewGroup) findViewById(R.id.include);
-            DrawView drawView = new DrawView(this, stillTempText, prefs.getString("stillTempThreshold", "0.0"),
-                    towerTempText, prefs.getString("towerTempThreshold", "0.0"));
+            DrawView drawView = new DrawView(this, stillTemp, stillTempThreshold, towerTemp, towerTempThreshold);
             myLayout.addView(drawView);
 
-            Date nowDate = Calendar.getInstance().getTime();
+
             long diffSec = Math.abs(srvDate.getTime() - nowDate.getTime()) / 1000;
             long diffMin = diffSec / 60;
 
             TextView LastUpd = (TextView) findViewById(R.id.lastupdate);
             LastUpd.setText(srvDate.toString() + " (" + String.valueOf(diffMin) + ":" + String.valueOf(diffSec) + " ago)");
             TextView TowerTemp = (TextView) findViewById(R.id.tempTowerVal);
-            TowerTemp.setText(towerTempText);
+            TowerTemp.setText(towerTemp);
             TextView StillTemp = (TextView) findViewById(R.id.tempStillVal);
-            StillTemp.setText(stillTempText);
+            StillTemp.setText(stillTemp);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -93,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
         GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(MainActivity.this);
         try {
             gcm.send("620914624750" + "@gcm.googleapis.com", Calendar.getInstance().getTime().toString(), data);
+            System.out.println(data);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -160,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
                 StillTempFix.setEnabled(!isChecked);
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putString("stillTempThreshold", (isChecked)?StillTempFix.getText().toString():"0.0");
+                editor.putBoolean("stillToggleChecked", isChecked);
                 editor.commit();
             }
         });
@@ -170,6 +174,7 @@ public class MainActivity extends AppCompatActivity {
                 TowerTempFix.setEnabled(!isChecked);
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putString("towerTempThreshold", (isChecked)?TowerTempFix.getText().toString():"0.0");
+                editor.putBoolean("towerToggleChecked", isChecked);
                 editor.commit();
             }
         });
@@ -248,28 +253,17 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_configSrv) {
-            TextView StillTempFix = (TextView)findViewById(R.id.editStillTempFix);
-            ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
-            TextView TowerTempFix = (TextView)findViewById(R.id.editTowerTempFix);
-            ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
+            final Bundle Data = new Bundle();
 
-            final Bundle data = new Bundle();
-            final Bundle stillConf = new Bundle();
-            final Bundle towerConf = new Bundle();
-
-            stillConf.putBoolean("fixtemp", toggleStill.isChecked());
-            stillConf.putString("absolute", StillTempFix.getText().toString());
-            towerConf.putBoolean("fixtemp", toggleTower.isChecked());
-            towerConf.putString("absolute", TowerTempFix.getText().toString());
-            data.putString("message_type", "ReconfigServer");
-            data.putBundle("stillConf", stillConf);
-            data.putBundle("towerConf", towerConf);
+            Data.putString("message_type", "ServerConfig");
+            Data.putString("fixtempStill", String.valueOf(prefs.getBoolean("stillToggleChecked", false)));
+            Data.putString("absoluteStill", prefs.getString("stillTempThreshold", "0.0"));
+            Data.putString("fixtempTower", String.valueOf(prefs.getBoolean("towerToggleChecked", false)));
+            Data.putString("absoluteTower", prefs.getString("towerTempThreshold", "0.0"));
 
             new Thread() {
                 @Override
-                public void run() {
-                    sendToServer(data);
-                }
+                public void run() {sendToServer(Data);}
             }.start();
 
             return true;
