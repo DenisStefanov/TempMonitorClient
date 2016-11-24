@@ -33,12 +33,19 @@ public class MainActivity extends AppCompatActivity {
     {
         listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-                if (!prefs.getBoolean("ScreenInfoValid", false)) {
-                    updateScreen();
+                if (!prefs.getBoolean("ReadingsValid", true)) {
+                    updateReadings();
                     SharedPreferences.Editor editor = prefs.edit();
-                    editor.putBoolean("ScreenInfoValid", true);
+                    editor.putBoolean("ReadingsValid", true);
                     editor.commit();
                 }
+                if (!prefs.getBoolean("LimitsValid", true)) {
+                    updateLimits();
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putBoolean("LimitsValid", true);
+                    editor.commit();
+                }
+
             }
         };
         prefs.registerOnSharedPreferenceChangeListener(listener);
@@ -51,32 +58,17 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void updateScreen() {
+    private void updateReadings() {
         try {
-            //Updating limits
-            TextView StillTempFix = (TextView) findViewById(R.id.editStillTempFix);
-            TextView TowerTempFix = (TextView) findViewById(R.id.editTowerTempFix);
-            ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
-            ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
-
-            String stillTempThreshold = prefs.getString("stillTempThreshold", "0.0");
-            String towerTempThreshold = prefs.getString("towerTempThreshold", "0.0");
-
-            toggleStill.setChecked(prefs.getBoolean("stillToggleChecked", false));
-            toggleTower.setChecked(prefs.getBoolean("towerToggleChecked", false));
-            StillTempFix.setText(stillTempThreshold);
-            TowerTempFix.setText(towerTempThreshold);
-
-            //Updating current readings
             Date nowDate = Calendar.getInstance().getTime();
             Date srvDate = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(prefs.getString("LastUpdated", "Fri Jan 01 00:00:00 2016"));
             String stillTemp = prefs.getString("stillTemp", "0.0");
             String towerTemp = prefs.getString("towerTemp", "0.0");
 
             ViewGroup myLayout = (ViewGroup) findViewById(R.id.include);
-            DrawView drawView = new DrawView(this, stillTemp, stillTempThreshold, towerTemp, towerTempThreshold);
+            DrawView drawView = new DrawView(this, stillTemp, prefs.getString("stillTempThreshold", "0.0"),
+                    towerTemp, prefs.getString("towerTempThreshold", "0.0"));
             myLayout.addView(drawView);
-
 
             long diffSec = Math.abs(srvDate.getTime() - nowDate.getTime()) / 1000;
             long diffMin = diffSec / 60;
@@ -87,6 +79,22 @@ public class MainActivity extends AppCompatActivity {
             TowerTemp.setText(towerTemp);
             TextView StillTemp = (TextView) findViewById(R.id.tempStillVal);
             StillTemp.setText(stillTemp);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateLimits() {
+        try {
+            TextView StillTempFix = (TextView) findViewById(R.id.editStillTempFix);
+            TextView TowerTempFix = (TextView) findViewById(R.id.editTowerTempFix);
+            ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
+            ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
+
+            toggleStill.setChecked(prefs.getBoolean("stillToggleChecked", false));
+            toggleTower.setChecked(prefs.getBoolean("towerToggleChecked", false));
+            StillTempFix.setText(prefs.getString("stillTempThreshold", "0.0"));
+            TowerTempFix.setText(prefs.getString("towerTempThreshold", "0.0"));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -127,7 +135,6 @@ public class MainActivity extends AppCompatActivity {
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         registerPreferenceListener();
-
         PreferenceManager.setDefaultValues(this, R.xml.pref_general, true);
         PreferenceManager.setDefaultValues(this, R.xml.pref_notification, true);
 
@@ -267,16 +274,16 @@ public class MainActivity extends AppCompatActivity {
             final Bundle Data = new Bundle();
 
             Data.putString("message_type", "ServerConfig");
-            Data.putString("fixtempStill", String.valueOf(prefs.getBoolean("stillToggleChecked", false)));
-            Data.putString("absoluteStill", prefs.getString("stillTempThreshold", "0.0"));
-            Data.putString("fixtempTower", String.valueOf(prefs.getBoolean("towerToggleChecked", false)));
-            Data.putString("absoluteTower", prefs.getString("towerTempThreshold", "0.0"));
+            Data.putString("fixtempstill", String.valueOf(prefs.getBoolean("stillToggleChecked", false)));
+            Data.putString("absolutestill", prefs.getString("stillTempThreshold", "0.0"));
+            Data.putString("fixtemptower", String.valueOf(prefs.getBoolean("towerToggleChecked", false)));
+            Data.putString("absolutetower", prefs.getString("towerTempThreshold", "0.0"));
 
             SharedPreferences.Editor editor = prefs.edit();
-            editor.putString("stillTempThreshold", Data.getString("stillTempThreshold", "0.0"));
-            editor.putString("towerTempThreshold", Data.getString("towerTempThreshold", "0.0"));
-            editor.putBoolean("stillToggleChecked", Boolean.valueOf(Data.getString("stillToggle", null)));
-            editor.putBoolean("towerToggleChecked", Boolean.valueOf(Data.getString("towerToggle", null)));
+            editor.putString("stillTempThreshold", Data.getString("absolutestill", "0.0"));
+            editor.putString("towerTempThreshold", Data.getString("absolutetower", "0.0"));
+            editor.putBoolean("stillToggleChecked", Boolean.valueOf(Data.getString("fixtempstill", null)));
+            editor.putBoolean("towerToggleChecked", Boolean.valueOf(Data.getString("fixtemptower", null)));
             editor.commit();
 
             new Thread() {
@@ -297,12 +304,6 @@ public class MainActivity extends AppCompatActivity {
             }.start();
             return true;
         }
-        if (id == R.id.action_portScan) {
-            Intent intent = new Intent(this, PortScanActivity.class);
-            startActivity(intent);
-            return true;
-        }
-
         return super.onOptionsItemSelected(item);
     }
 }

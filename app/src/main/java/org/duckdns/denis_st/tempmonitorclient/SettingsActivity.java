@@ -189,13 +189,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("ServerIP"));
-            bindPreferenceSummaryToValue(findPreference("user"));
-            bindPreferenceSummaryToValue(findPreference("passwd"));
-            bindPreferenceSummaryToValue(findPreference("startSrvCmd"));
-            bindPreferenceSummaryToValue(findPreference("stopSrvCmd"));
-            bindPreferenceSummaryToValue(findPreference("configSrvCmd"));
-            bindPreferenceSummaryToValue(findPreference("configSrvGetCmd"));
+            //bindPreferenceSummaryToValue(findPreference("SOMESETTINGHERE"));
         }
 
         @Override

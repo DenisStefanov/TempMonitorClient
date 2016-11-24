@@ -36,16 +36,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.duckdns.denis_st.tempmonitorclient.MainActivity" />
         </activity>
-        <activity
-            android:name=".PortScanActivity"
-            android:label="@string/title_activity_port_scan"
-            android:screenOrientation="portrait">
-            android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.duckdns.denis_st.tempmonitorclient.MainActivity" />
-        </activity>
 
         <service
             android:name=".RingtonePlayingService"

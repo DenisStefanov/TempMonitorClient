@@ -47,7 +47,7 @@ public class GcmIntentService extends IntentService {
 				editor.putString("LastUpdated", extras.getString("LastUpdated", null));
 				editor.putString("stillTemp", extras.getString("tempStill", "0.0"));
 				editor.putString("towerTemp", extras.getString("tempTower", "0.0"));
-                editor.putBoolean("ScreenInfoValid", false);
+                editor.putBoolean("ReadingsValid", false);
 				editor.commit();
             }
             if (type.equals("alarma")) {
@@ -75,7 +75,7 @@ public class GcmIntentService extends IntentService {
 				editor.putString("towerTempThreshold", extras.getString("towerTempThreshold", "0.0"));
 				editor.putBoolean("stillToggleChecked", Boolean.valueOf(extras.getString("stillToggle", null)));
 				editor.putBoolean("towerToggleChecked", Boolean.valueOf(extras.getString("towerToggle", null)));
-                editor.putBoolean("ScreenInfoValid", false);
+                editor.putBoolean("LimitsValid", false);
 				editor.commit();
 			}
 
