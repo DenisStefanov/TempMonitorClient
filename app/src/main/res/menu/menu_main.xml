@@ -33,5 +33,15 @@
         android:orderInCategory="100"
         android:title="@string/action_configSrvGet"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_poweroff"
+        android:orderInCategory="100"
+        android:title="@string/action_poweroff"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_poweron"
+        android:orderInCategory="100"
+        android:title="@string/action_poweron"
+        app:showAsAction="never" />
 
 </menu>

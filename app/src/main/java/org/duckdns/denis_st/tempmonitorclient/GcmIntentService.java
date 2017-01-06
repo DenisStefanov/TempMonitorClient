@@ -13,6 +13,11 @@ import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
 public class GcmIntentService extends IntentService {
 	public static final int NOTIFICATION_ID = 1;
 	private static final String TAG = "GcmIntentService";
@@ -43,10 +48,12 @@ public class GcmIntentService extends IntentService {
             String type = extras.getString("type", null);
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 			if (type.equals("upd") || type.equals("alarma")) {
+				Date nowDate = Calendar.getInstance().getTime();
                 SharedPreferences.Editor editor = prefs.edit();
-				editor.putString("LastUpdated", extras.getString("LastUpdated", null));
+				editor.putString("LastUpdatedSrv", extras.getString("LastUpdated", null));
 				editor.putString("stillTemp", extras.getString("tempStill", "0.0"));
 				editor.putString("towerTemp", extras.getString("tempTower", "0.0"));
+				editor.putString("LastUpdatedLcl", new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").format(nowDate));
                 editor.putBoolean("ReadingsValid", false);
 				editor.commit();
             }

@@ -61,7 +61,8 @@ public class MainActivity extends AppCompatActivity {
     private void updateReadings() {
         try {
             Date nowDate = Calendar.getInstance().getTime();
-            Date srvDate = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(prefs.getString("LastUpdated", "Fri Jan 01 00:00:00 2016"));
+            Date lclDate = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(prefs.getString("LastUpdatedLcl", "Fri Jan 01 00:00:00 2016"));
+            String srvDate = prefs.getString("LastUpdatedSrv", "Unknown");
             String stillTemp = prefs.getString("stillTemp", "0.0");
             String towerTemp = prefs.getString("towerTemp", "0.0");
 
@@ -70,8 +71,9 @@ public class MainActivity extends AppCompatActivity {
                     towerTemp, prefs.getString("towerTempThreshold", "0.0"));
             myLayout.addView(drawView);
 
-            long diffSec = Math.abs(srvDate.getTime() - nowDate.getTime()) / 1000;
+            long diffSec = Math.abs(lclDate.getTime() - nowDate.getTime()) / 1000;
             long diffMin = diffSec / 60;
+            diffSec = diffSec - diffMin * 60;
 
             TextView LastUpd = (TextView) findViewById(R.id.lastupdate);
             LastUpd.setText(srvDate.toString() + " (" + String.valueOf(diffMin) + ":" + String.valueOf(diffSec) + " ago)");
@@ -169,7 +171,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_UP){
-                    //TODO
+                    updateReadings();
+                    updateLimits();
                 }
                 return true;
             }
@@ -201,6 +204,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        updateReadings();
+        updateLimits();
     }
 
     @Override
@@ -296,6 +301,31 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_configSrvGet) {
             final Bundle data = new Bundle();
             data.putString("message_type", "ConfigServerGet");
+            new Thread() {
+                @Override
+                public void run() {
+                    sendToServer(data);
+                }
+            }.start();
+            return true;
+        }
+
+        if (id == R.id.action_poweroff) {
+            final Bundle data = new Bundle();
+            data.putString("message_type", "PowerControl");
+            data.putString("Power", "Off");
+            new Thread() {
+                @Override
+                public void run() {
+                    sendToServer(data);
+                }
+            }.start();
+            return true;
+        }
+        if (id == R.id.action_poweron) {
+            final Bundle data = new Bundle();
+            data.putString("message_type", "PowerControl");
+            data.putString("Power", "On");
             new Thread() {
                 @Override
                 public void run() {
