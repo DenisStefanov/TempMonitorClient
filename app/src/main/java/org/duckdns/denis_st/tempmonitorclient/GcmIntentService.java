@@ -1,6 +1,7 @@
 package org.duckdns.denis_st.tempmonitorclient;
 
 import com.google.android.gms.common.api.BooleanResult;
+import com.google.android.gms.common.server.converter.StringToIntConverter;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import android.app.IntentService;
 import android.app.NotificationManager;
@@ -75,7 +76,11 @@ public class GcmIntentService extends IntentService {
 			}
 			if (type.equals("Notify")){
 				sendNotification(extras.getString("note", null));
-			}
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString("GPIO" + extras.getString("GPIO", ""), extras.getString("State", ""));
+                editor.putBoolean("GPIOCheckboxValid", false);
+                editor.commit();
+            }
             if (type.equals("ServerConfig")){
 				SharedPreferences.Editor editor = prefs.edit();
 				editor.putString("stillTempThreshold", extras.getString("stillTempThreshold", "0.0"));

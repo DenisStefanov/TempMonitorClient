@@ -45,6 +45,12 @@ public class MainActivity extends AppCompatActivity {
                     editor.putBoolean("LimitsValid", true);
                     editor.commit();
                 }
+                if (!prefs.getBoolean("GPIOCheckboxValid", true)) {
+                    updateGPIO();
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putBoolean("GPIOCheckboxValid", true);
+                    editor.commit();
+                }
 
             }
         };
@@ -56,6 +62,18 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 Toast.makeText(MainActivity.this, text, Toast.LENGTH_LONG).show();}
         });
+    }
+
+    private void updateGPIO()
+    {
+        MenuItem gpio17 = (MenuItem) findViewById(R.id.action_gpio17);
+        MenuItem gpio18 = (MenuItem) findViewById(R.id.action_gpio18);
+        MenuItem gpio22 = (MenuItem) findViewById(R.id.action_gpio22);
+        MenuItem gpio27 = (MenuItem) findViewById(R.id.action_gpio27);
+        gpio17.setChecked((prefs.getString("GPIO17", "")=="On")?true:false);
+        gpio18.setChecked((prefs.getString("GPIO18", "")=="On")?true:false);
+        gpio22.setChecked((prefs.getString("GPIO22", "")=="On")?true:false);
+        gpio27.setChecked((prefs.getString("GPIO27", "")=="On")?true:false);
     }
 
     private void updateReadings() {
@@ -310,10 +328,12 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
-        if (id == R.id.action_poweroff) {
+        if (id == R.id.action_gpio17) {
             final Bundle data = new Bundle();
             data.putString("message_type", "PowerControl");
-            data.putString("Power", "Off");
+            data.putString("GPIO", "17");
+            data.putString("State", item.isChecked()?"Off": "On");
+            item.setChecked(item.isChecked()?false: true);
             new Thread() {
                 @Override
                 public void run() {
@@ -322,10 +342,40 @@ public class MainActivity extends AppCompatActivity {
             }.start();
             return true;
         }
-        if (id == R.id.action_poweron) {
+        if (id == R.id.action_gpio18) {
             final Bundle data = new Bundle();
             data.putString("message_type", "PowerControl");
-            data.putString("Power", "On");
+            data.putString("GPIO", "18");
+            data.putString("State", item.isChecked()?"Off": "On");
+            item.setChecked(item.isChecked()?false: true);
+            new Thread() {
+                @Override
+                public void run() {
+                    sendToServer(data);
+                }
+            }.start();
+            return true;
+        }
+        if (id == R.id.action_gpio27) {
+            final Bundle data = new Bundle();
+            data.putString("message_type", "PowerControl");
+            data.putString("GPIO", "27");
+            data.putString("State", item.isChecked()?"Off": "On");
+            item.setChecked(item.isChecked()?false: true);
+            new Thread() {
+                @Override
+                public void run() {
+                    sendToServer(data);
+                }
+            }.start();
+            return true;
+        }
+        if (id == R.id.action_gpio22) {
+            final Bundle data = new Bundle();
+            data.putString("message_type", "PowerControl");
+            data.putString("GPIO", "22");
+            data.putString("State", item.isChecked()?"Off": "On");
+            item.setChecked(item.isChecked()?false: true);
             new Thread() {
                 @Override
                 public void run() {
