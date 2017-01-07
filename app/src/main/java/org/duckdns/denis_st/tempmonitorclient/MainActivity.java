@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private String regid = null;
     private SharedPreferences prefs;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
+    private Menu MainMenu = null;
 
     private void registerPreferenceListener()
     {
@@ -66,14 +67,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateGPIO()
     {
-        MenuItem gpio17 = (MenuItem) findViewById(R.id.action_gpio17);
-        MenuItem gpio18 = (MenuItem) findViewById(R.id.action_gpio18);
-        MenuItem gpio22 = (MenuItem) findViewById(R.id.action_gpio22);
-        MenuItem gpio27 = (MenuItem) findViewById(R.id.action_gpio27);
-        gpio17.setChecked((prefs.getString("GPIO17", "")=="On")?true:false);
-        gpio18.setChecked((prefs.getString("GPIO18", "")=="On")?true:false);
-        gpio22.setChecked((prefs.getString("GPIO22", "")=="On")?true:false);
-        gpio27.setChecked((prefs.getString("GPIO27", "")=="On")?true:false);
+        MenuItem gpio17 = MainMenu.findItem(R.id.action_gpio17);
+        MenuItem gpio18 = MainMenu.findItem(R.id.action_gpio18);
+        MenuItem gpio22 = MainMenu.findItem(R.id.action_gpio22);
+        MenuItem gpio27 = MainMenu.findItem(R.id.action_gpio27);
+        gpio17.setChecked((prefs.getString("GPIO17", "").equals("On"))?true:false);
+        gpio18.setChecked((prefs.getString("GPIO18", "").equals("On"))?true:false);
+        gpio22.setChecked((prefs.getString("GPIO22", "").equals("On"))?true:false);
+        gpio27.setChecked((prefs.getString("GPIO27", "").equals("On"))?true:false);
     }
 
     private void updateReadings() {
@@ -240,6 +241,8 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        MainMenu = menu;
+        updateGPIO();
         return true;
     }
 
