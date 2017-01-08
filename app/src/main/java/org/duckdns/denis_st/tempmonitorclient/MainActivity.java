@@ -387,6 +387,19 @@ public class MainActivity extends AppCompatActivity {
             }.start();
             return true;
         }
+
+        if (id == R.id.action_readActuals) {
+            final Bundle data = new Bundle();
+            data.putString("message_type", "ReadActuals");
+            new Thread() {
+                @Override
+                public void run() {
+                    sendToServer(data);
+                }
+            }.start();
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 }

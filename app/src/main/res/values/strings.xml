@@ -12,6 +12,7 @@
     <string name="action_gpio18">GPIO 18</string>
     <string name="action_gpio27">GPIO 27</string>
     <string name="action_gpio22">GPIO 22</string>
+    <string name="action_readActuals">Read GPIO actuals</string>
     <string name="pref_header_general">General</string>
     <string name="pref_header_notifications">Notifications</string>
 
