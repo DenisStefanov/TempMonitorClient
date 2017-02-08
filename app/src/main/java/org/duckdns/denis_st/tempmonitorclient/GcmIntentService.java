@@ -48,16 +48,6 @@ public class GcmIntentService extends IntentService {
 		try {
             String type = extras.getString("type", null);
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-			if (type.equals("upd") || type.equals("alarma")) {
-				Date nowDate = Calendar.getInstance().getTime();
-                SharedPreferences.Editor editor = prefs.edit();
-				editor.putString("LastUpdatedSrv", extras.getString("LastUpdated", null));
-				editor.putString("stillTemp", extras.getString("tempStill", "0.0"));
-				editor.putString("towerTemp", extras.getString("tempTower", "0.0"));
-				editor.putString("LastUpdatedLcl", new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").format(nowDate));
-                editor.putBoolean("ReadingsValid", false);
-				editor.commit();
-            }
             if (type.equals("alarma")) {
 				sendNotification("ALARMA");
 				try {
@@ -74,23 +64,6 @@ public class GcmIntentService extends IntentService {
                     }
 				} catch (Exception e) {e.printStackTrace();}
 			}
-			if (type.equals("Notify")){
-				sendNotification(extras.getString("note", null));
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString("GPIO" + extras.getString("GPIO", ""), extras.getString("State", ""));
-                editor.putBoolean("GPIOCheckboxValid", false);
-                editor.commit();
-            }
-            if (type.equals("ServerConfig")){
-				SharedPreferences.Editor editor = prefs.edit();
-				editor.putString("stillTempThreshold", extras.getString("stillTempThreshold", "0.0"));
-				editor.putString("towerTempThreshold", extras.getString("towerTempThreshold", "0.0"));
-				editor.putBoolean("stillToggleChecked", Boolean.valueOf(extras.getString("stillToggle", null)));
-				editor.putBoolean("towerToggleChecked", Boolean.valueOf(extras.getString("towerToggle", null)));
-                editor.putBoolean("LimitsValid", false);
-				editor.commit();
-			}
-
 		} catch (Exception e) {e.printStackTrace();}
 	}
 

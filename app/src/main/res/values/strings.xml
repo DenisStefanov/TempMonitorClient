@@ -3,19 +3,8 @@
     <string name="app_name">TempMonitorClient</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_settings">Settings</string>
-    <string name="action_updRegID">Update RegID</string>
-    <string name="action_startSrv">Start Server</string>
-    <string name="action_stopSrv">Stop Server</string>
-    <string name="action_configSrv">Upload config to the Server</string>
-    <string name="action_configSrvGet">Get config from the Server</string>
-    <string name="action_gpio17">GPIO 17</string>
-    <string name="action_gpio18">GPIO 18</string>
-    <string name="action_gpio27">GPIO 27</string>
-    <string name="action_gpio22">GPIO 22</string>
-    <string name="action_readActuals">Read GPIO actuals</string>
     <string name="pref_header_general">General</string>
     <string name="pref_header_notifications">Notifications</string>
-
     <string name="pref_title_new_message_notifications">Alarm notifications</string>
     <string name="pref_title_ringtone">Ringtone</string>
     <string name="pref_ringtone_silent">Silent</string>
