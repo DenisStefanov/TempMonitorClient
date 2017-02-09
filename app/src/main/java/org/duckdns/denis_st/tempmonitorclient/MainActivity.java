@@ -27,15 +27,14 @@ import java.util.Date;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
-    private WebView webTempmon;
     private GcmRegistrar tmgcm;
-    private String regid = null;
     private SharedPreferences prefs;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
     private Menu MainMenu = null;
 
     private void GCMRegister() {
             System.out.println("Registering with GCM...");
+            String regid;
             regid = tmgcm.register();
             if (!regid.isEmpty()) {
                 System.out.println("Got GCM reg id. [" + regid + "]");
@@ -63,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
             System.out.println("No valid Google Play Services APK found.");
         }
-
+        WebView webTempmon;
         webTempmon = (WebView) findViewById(R.id.webTempmon);
         webTempmon.getSettings().setJavaScriptEnabled(true);
         webTempmon.setWebViewClient(new WebViewClient(){
@@ -71,8 +70,8 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
-        webTempmon.loadUrl("http://yandex.ru");
-        //webTempmon.loadUrl("http://denis-st.duckdns.org:8000");
+        //webTempmon.loadUrl("http://yandex.ru");
+        webTempmon.loadUrl("http://denis-st.duckdns.org:8000");
 
     }
 
