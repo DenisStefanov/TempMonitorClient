@@ -55,7 +55,7 @@ public class GcmIntentService extends IntentService {
 				editor.putString("stillTemp", extras.getString("tempStill", "0.0"));
 				editor.putString("towerTemp", extras.getString("tempTower", "0.0"));
 				editor.putString("LastUpdatedLcl", new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").format(nowDate));
-                editor.putBoolean("ReadingsValid", false);
+                editor.putBoolean("ReadingsChanged", !prefs.getBoolean("ReadingsChanged", false));
 				editor.commit();
             }
             if (type.equals("alarma")) {
@@ -78,7 +78,7 @@ public class GcmIntentService extends IntentService {
 				sendNotification(extras.getString("note", null));
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putString("GPIO" + extras.getString("GPIO", ""), extras.getString("State", ""));
-                editor.putBoolean("GPIOCheckboxValid", false);
+                editor.putBoolean("GPIOCheckboxChanged", !prefs.getBoolean("GPIOCheckboxChanged", false));
                 editor.commit();
             }
             if (type.equals("ServerConfig")){
@@ -87,7 +87,7 @@ public class GcmIntentService extends IntentService {
 				editor.putString("towerTempThreshold", extras.getString("towerTempThreshold", "0.0"));
 				editor.putBoolean("stillToggleChecked", Boolean.valueOf(extras.getString("stillToggle", null)));
 				editor.putBoolean("towerToggleChecked", Boolean.valueOf(extras.getString("towerToggle", null)));
-                editor.putBoolean("LimitsValid", false);
+                editor.putBoolean("LimitsChanged", !prefs.getBoolean("LimitsChanged", false));
 				editor.commit();
 			}
 

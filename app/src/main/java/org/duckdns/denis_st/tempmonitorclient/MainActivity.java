@@ -19,9 +19,12 @@ import android.widget.ToggleButton;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
+
+import static android.R.id.list;
 
 public class MainActivity extends AppCompatActivity {
     private GcmRegistrar tmgcm;
@@ -34,25 +37,15 @@ public class MainActivity extends AppCompatActivity {
     {
         listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-                if (!prefs.getBoolean("ReadingsValid", true)) {
+                if (Arrays.asList("ReadingsChanged").contains(key)) {
                     updateReadings();
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putBoolean("ReadingsValid", true);
-                    editor.commit();
                 }
-                if (!prefs.getBoolean("LimitsValid", true)) {
+                if (Arrays.asList("LimitsChanged").contains(key)) {
                     updateLimits();
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putBoolean("LimitsValid", true);
-                    editor.commit();
                 }
-                if (!prefs.getBoolean("GPIOCheckboxValid", true)) {
+                if (Arrays.asList("GPIOCheckboxChanged").contains(key)) {
                     updateGPIO();
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putBoolean("GPIOCheckboxValid", true);
-                    editor.commit();
                 }
-
             }
         };
         prefs.registerOnSharedPreferenceChangeListener(listener);
@@ -75,6 +68,10 @@ public class MainActivity extends AppCompatActivity {
         gpio18.setChecked((prefs.getString("GPIO18", "").equals("On"))?true:false);
         gpio22.setChecked((prefs.getString("GPIO22", "").equals("On"))?true:false);
         gpio27.setChecked((prefs.getString("GPIO27", "").equals("On"))?true:false);
+        gpio17.setEnabled(true);
+        gpio18.setEnabled(true);
+        gpio22.setEnabled(true);
+        gpio27.setEnabled(true);
     }
 
     private void updateReadings() {
@@ -242,7 +239,16 @@ public class MainActivity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         MainMenu = menu;
-        updateGPIO();
+
+        final Bundle data = new Bundle();
+        data.putString("message_type", "ReadActuals");
+        new Thread() {
+            @Override
+            public void run() {
+                sendToServer(data);
+            }
+        }.start();
+
         return true;
     }
 
@@ -336,7 +342,8 @@ public class MainActivity extends AppCompatActivity {
             data.putString("message_type", "PowerControl");
             data.putString("GPIO", "17");
             data.putString("State", item.isChecked()?"Off": "On");
-            item.setChecked(item.isChecked()?false: true);
+            //item.setChecked(item.isChecked()?false: true);
+            item.setEnabled(false);
             new Thread() {
                 @Override
                 public void run() {
@@ -350,7 +357,8 @@ public class MainActivity extends AppCompatActivity {
             data.putString("message_type", "PowerControl");
             data.putString("GPIO", "18");
             data.putString("State", item.isChecked()?"Off": "On");
-            item.setChecked(item.isChecked()?false: true);
+            //item.setChecked(item.isChecked()?false: true);
+            item.setEnabled(false);
             new Thread() {
                 @Override
                 public void run() {
@@ -364,7 +372,8 @@ public class MainActivity extends AppCompatActivity {
             data.putString("message_type", "PowerControl");
             data.putString("GPIO", "27");
             data.putString("State", item.isChecked()?"Off": "On");
-            item.setChecked(item.isChecked()?false: true);
+            //item.setChecked(item.isChecked()?false: true);
+            item.setEnabled(false);
             new Thread() {
                 @Override
                 public void run() {
@@ -378,7 +387,8 @@ public class MainActivity extends AppCompatActivity {
             data.putString("message_type", "PowerControl");
             data.putString("GPIO", "22");
             data.putString("State", item.isChecked()?"Off": "On");
-            item.setChecked(item.isChecked()?false: true);
+            //item.setChecked(item.isChecked()?false: true);
+            item.setEnabled(false);
             new Thread() {
                 @Override
                 public void run() {
