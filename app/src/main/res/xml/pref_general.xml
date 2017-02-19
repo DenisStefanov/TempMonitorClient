@@ -1,4 +1,12 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <EditTextPreference android:title="External Server URL"
+        android:key="ServerURLExt"
+        android:defaultValue="http://denis-st.duckdns.org">
+    </EditTextPreference>
 
+    <EditTextPreference android:title="Internal Server URL"
+        android:key="ServerURLInt"
+        android:defaultValue="http://192.168.0.99">
+    </EditTextPreference>
 </PreferenceScreen>

@@ -1,57 +1,65 @@
 package org.duckdns.denis_st.tempmonitorclient;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.MotionEvent;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.preference.PreferenceManager;
-import android.view.ViewGroup;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.CompoundButton;
-import android.widget.TextView;
-import android.widget.Toast;
-import android.widget.ToggleButton;
-
-import com.google.android.gms.gcm.GoogleCloudMessaging;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     private GcmRegistrar tmgcm;
     private SharedPreferences prefs;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
     private Menu MainMenu = null;
+    private String RegID = null;
+    private JavaScriptInterface jsInterface = null;
 
     private void GCMRegister() {
-            System.out.println("Registering with GCM...");
-            String regid;
-            regid = tmgcm.register();
-            if (!regid.isEmpty()) {
-                System.out.println("Got GCM reg id. [" + regid + "]");
-                }
+        System.out.println("Registering with GCM...");
+        RegID = tmgcm.register();
+        if (!RegID.isEmpty()) {
+            System.out.println("Got GCM reg id. [" + RegID + "]");
+            if (jsInterface != null) {
+                jsInterface.setRegID(RegID);
+            }
+        }
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        String url;
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         PreferenceManager.setDefaultValues(this, R.xml.pref_general, true);
         PreferenceManager.setDefaultValues(this, R.xml.pref_notification, true);
 
+        WifiManager wifiMgr = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
+        WifiInfo wifiInfo = wifiMgr.getConnectionInfo();
+        String nameSSID = wifiInfo.getSSID();
+        if (nameSSID.equals("\"DIR-320NRU - 56\"")) {
+            url = prefs.getString("ServerURLInt", null);
+        }
+        else {
+            url = prefs.getString("ServerURLExt", null);
+        }
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        System.out.println("Registering JS interface...");
+        jsInterface = new JavaScriptInterface(this);
 
         tmgcm = new GcmRegistrar(getApplicationContext());
         // Check device for Play Services APK.
@@ -62,17 +70,23 @@ public class MainActivity extends AppCompatActivity {
             } else {
             System.out.println("No valid Google Play Services APK found.");
         }
+
         WebView webTempmon;
         webTempmon = (WebView) findViewById(R.id.webTempmon);
+
+        webTempmon.addJavascriptInterface(jsInterface, "Android");
         webTempmon.getSettings().setJavaScriptEnabled(true);
+        webTempmon.getSettings().setAppCacheEnabled(false);
+        webTempmon.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
         webTempmon.setWebViewClient(new WebViewClient(){
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 return false;
             }
         });
-        //webTempmon.loadUrl("http://yandex.ru");
-        webTempmon.loadUrl("http://denis-st.duckdns.org:8000");
-
+        //Map<String, String> extraHeaders = new HashMap<String, String>();
+        //extraHeaders.put("orientation",Integer.toString(this.getResources().getConfiguration().orientation));
+        webTempmon.loadUrl(url + "/getTempReadingsChart/?orientation=" + Integer.toString(this.getResources().getConfiguration().orientation));
+        //webTempmon.clearCache(true);
     }
 
     @Override

@@ -190,6 +190,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // updated to reflect the new value, per the Android Design
             // guidelines.
             //bindPreferenceSummaryToValue(findPreference("SOMESETTINGHERE"));
+            bindPreferenceSummaryToValue(findPreference("ServerURLInt"));
+            bindPreferenceSummaryToValue(findPreference("ServerURLExt"));
         }
 
         @Override
