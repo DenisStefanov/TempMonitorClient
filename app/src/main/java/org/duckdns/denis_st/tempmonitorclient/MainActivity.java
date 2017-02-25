@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
         webTempmon.setWebViewClient(new WebViewClient(){
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 return false;
-            }
+0            }
         });
         //Map<String, String> extraHeaders = new HashMap<String, String>();
         //extraHeaders.put("orientation",Integer.toString(this.getResources().getConfiguration().orientation));
