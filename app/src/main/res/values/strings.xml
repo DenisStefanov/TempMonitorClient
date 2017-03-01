@@ -1,5 +1,4 @@
 <resources>
-    <string name="GCMPROJECT_ID">620914624750</string>
     <string name="app_name">TempMonitorClient</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_settings">Settings</string>
