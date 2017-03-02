@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "620914624750",
+    "firebase_url": "https://turing-lane-446.firebaseio.com",
+    "project_id": "turing-lane-446",
+    "storage_bucket": "turing-lane-446.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:620914624750:android:c55569d11da3c167",
+        "android_client_info": {
+          "package_name": "org.duckdns.denis_st.tempmonitorclient"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "620914624750-qnkmaiko0k8gpiu2vfjub6rj9osbkoo4.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "620914624750.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0B_3YCzfscoc3VnTGFtHf-UC2Vn48nQM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

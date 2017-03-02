@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Menu;
@@ -16,18 +17,19 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.google.android.gms.gcm.GoogleCloudMessaging;
-import java.io.IOException;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.RemoteMessage;
+
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
-import static android.R.id.list;
-
 public class MainActivity extends AppCompatActivity {
-    private GcmRegistrar tmgcm;
     private String regid = null;
     private SharedPreferences prefs;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
@@ -49,6 +51,15 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         prefs.registerOnSharedPreferenceChangeListener(listener);
+    }
+
+    private void sendToServer(Map<String,String> data){
+        FirebaseMessaging fm = FirebaseMessaging.getInstance();
+        fm.send(new RemoteMessage.Builder("620914624750" + "@gcm.googleapis.com")
+                .setMessageId(rndId())
+                .setData(data)
+                .build());
+            System.out.println(data);
     }
 
     private void showToastinMain(final String text) {
@@ -129,24 +140,6 @@ public class MainActivity extends AppCompatActivity {
         return sb.toString();
     }
 
-    private void sendToServer(Bundle data){
-        GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(MainActivity.this);
-        try {
-            gcm.send("620914624750" + "@gcm.googleapis.com", rndId(), data);
-            System.out.println(data);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void GCMRegister() {
-            System.out.println("Registering with GCM...");
-            regid = tmgcm.register();
-            if (!regid.isEmpty()) {
-                System.out.println("Got GCM reg id. [" + regid + "]");
-                }
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -172,16 +165,6 @@ public class MainActivity extends AppCompatActivity {
         StillTempFix.setEnabled(!toggleStill.isChecked());
         TowerTempFix.setEnabled(!toggleTower.isChecked());
 
-        tmgcm = new GcmRegistrar(getApplicationContext());
-        // Check device for Play Services APK.
-        if (tmgcm.checkPlayServices(this)) {
-            new Thread() {
-                @Override
-                public void run() {GCMRegister();}}.start();
-            } else {
-            System.out.println("No valid Google Play Services APK found.");
-        }
-
         View v = getWindow().getDecorView().findViewById(android.R.id.content);
         v.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -189,6 +172,7 @@ public class MainActivity extends AppCompatActivity {
                 if (event.getAction() == MotionEvent.ACTION_UP){
                     updateReadings();
                     updateLimits();
+                    Log.d("TempMon", FirebaseInstanceId.getInstance().getToken());
                 }
                 return true;
             }
@@ -240,8 +224,9 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         MainMenu = menu;
 
-        final Bundle data = new Bundle();
-        data.putString("message_type", "ReadActuals");
+        final Map<String, String> data = new HashMap<String, String>();
+
+        data.put("message_type", "ReadActuals");
         new Thread() {
             @Override
             public void run() {
@@ -266,12 +251,8 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_updRegID) {
-            final Bundle data = new Bundle();
-            data.putString("message_type", "StoreRegid");
-            if (regid.isEmpty()) {
-                showToastinMain("RegID is empty. Will not update Server");
-                return false;
-            }
+            final Map<String, String> data = new HashMap<String, String>();
+            data.put("message_type", "StoreRegid");
             new Thread() {
                 @Override
                 public void run() {
@@ -281,8 +262,8 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_startSrv) {
-            final Bundle data = new Bundle();
-            data.putString("message_type", "StartServer");
+            final Map<String, String> data = new HashMap<String, String>();
+            data.put("message_type", "StartServer");
             new Thread() {
                 @Override
                 public void run() {
@@ -292,8 +273,8 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_stopSrv) {
-            final Bundle data = new Bundle();
-            data.putString("message_type", "StopServer");
+            final Map<String, String> data = new HashMap<String, String>();
+            data.put("message_type", "StopServer");
             new Thread() {
                 @Override
                 public void run() {
@@ -303,31 +284,31 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_configSrv) {
-            final Bundle Data = new Bundle();
+            final Map<String, String> data = new HashMap<String, String>();
 
-            Data.putString("message_type", "ServerConfig");
-            Data.putString("fixtempstill", String.valueOf(prefs.getBoolean("stillToggleChecked", false)));
-            Data.putString("absolutestill", prefs.getString("stillTempThreshold", "0.0"));
-            Data.putString("fixtemptower", String.valueOf(prefs.getBoolean("towerToggleChecked", false)));
-            Data.putString("absolutetower", prefs.getString("towerTempThreshold", "0.0"));
+            data.put("message_type", "ServerConfig");
+            data.put("fixtempstill", String.valueOf(prefs.getBoolean("stillToggleChecked", false)));
+            data.put("absolutestill", prefs.getString("stillTempThreshold", "0.0"));
+            data.put("fixtemptower", String.valueOf(prefs.getBoolean("towerToggleChecked", false)));
+            data.put("absolutetower", prefs.getString("towerTempThreshold", "0.0"));
 
             SharedPreferences.Editor editor = prefs.edit();
-            editor.putString("stillTempThreshold", Data.getString("absolutestill", "0.0"));
-            editor.putString("towerTempThreshold", Data.getString("absolutetower", "0.0"));
-            editor.putBoolean("stillToggleChecked", Boolean.valueOf(Data.getString("fixtempstill", null)));
-            editor.putBoolean("towerToggleChecked", Boolean.valueOf(Data.getString("fixtemptower", null)));
+            editor.putString("stillTempThreshold", data.get("absolutestill"));
+            editor.putString("towerTempThreshold", data.get("absolutetower"));
+            editor.putBoolean("stillToggleChecked", Boolean.valueOf(data.get("fixtempstill")));
+            editor.putBoolean("towerToggleChecked", Boolean.valueOf(data.get("fixtemptower")));
             editor.commit();
 
             new Thread() {
                 @Override
-                public void run() {sendToServer(Data);}
+                public void run() {sendToServer(data);}
             }.start();
 
             return true;
         }
         if (id == R.id.action_configSrvGet) {
-            final Bundle data = new Bundle();
-            data.putString("message_type", "ConfigServerGet");
+            final Map<String, String> data = new HashMap<String, String>();
+            data.put("message_type", "ConfigServerGet");
             new Thread() {
                 @Override
                 public void run() {
@@ -338,10 +319,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (id == R.id.action_gpio17) {
-            final Bundle data = new Bundle();
-            data.putString("message_type", "PowerControl");
-            data.putString("GPIO", "17");
-            data.putString("State", item.isChecked()?"Off": "On");
+            final Map<String, String> data = new HashMap<String, String>();
+            data.put("message_type", "PowerControl");
+            data.put("GPIO", "17");
+            data.put("State", item.isChecked()?"Off": "On");
             //item.setChecked(item.isChecked()?false: true);
             item.setEnabled(false);
             new Thread() {
@@ -353,10 +334,10 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_gpio18) {
-            final Bundle data = new Bundle();
-            data.putString("message_type", "PowerControl");
-            data.putString("GPIO", "18");
-            data.putString("State", item.isChecked()?"Off": "On");
+            final Map<String, String> data = new HashMap<String, String>();
+            data.put("message_type", "PowerControl");
+            data.put("GPIO", "18");
+            data.put("State", item.isChecked()?"Off": "On");
             //item.setChecked(item.isChecked()?false: true);
             item.setEnabled(false);
             new Thread() {
@@ -368,10 +349,10 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_gpio27) {
-            final Bundle data = new Bundle();
-            data.putString("message_type", "PowerControl");
-            data.putString("GPIO", "27");
-            data.putString("State", item.isChecked()?"Off": "On");
+            final Map<String, String> data = new HashMap<String, String>();
+            data.put("message_type", "PowerControl");
+            data.put("GPIO", "27");
+            data.put("State", item.isChecked()?"Off": "On");
             //item.setChecked(item.isChecked()?false: true);
             item.setEnabled(false);
             new Thread() {
@@ -383,10 +364,10 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_gpio22) {
-            final Bundle data = new Bundle();
-            data.putString("message_type", "PowerControl");
-            data.putString("GPIO", "22");
-            data.putString("State", item.isChecked()?"Off": "On");
+            final Map<String, String> data = new HashMap<String, String>();
+            data.put("message_type", "PowerControl");
+            data.put("GPIO", "22");
+            data.put("State", item.isChecked()?"Off": "On");
             //item.setChecked(item.isChecked()?false: true);
             item.setEnabled(false);
             new Thread() {
@@ -399,8 +380,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (id == R.id.action_readActuals) {
-            final Bundle data = new Bundle();
-            data.putString("message_type", "ReadActuals");
+            final Map<String, String> data = new HashMap<String, String>();
+            data.put("message_type", "ReadActuals");
             new Thread() {
                 @Override
                 public void run() {
