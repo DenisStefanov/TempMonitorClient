@@ -94,4 +94,14 @@
         android:layout_marginLeft="130dp"
         android:layout_marginTop="40dp"
         android:id="@+id/editTowerTempFix" />
+
+    <Button
+        android:text="CameraShot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/CamerashotClick"
+        android:layout_marginTop="80dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 </RelativeLayout>

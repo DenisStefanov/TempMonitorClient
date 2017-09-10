@@ -12,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.preference.PreferenceManager;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -155,6 +156,7 @@ public class MainActivity extends AppCompatActivity {
 
         ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
         ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
+        Button cameraShot = (Button) findViewById(R.id.CamerashotClick);
         TextView StillTempFix = (TextView)findViewById(R.id.editStillTempFix);
         TextView TowerTempFix = (TextView)findViewById(R.id.editTowerTempFix);
 
@@ -199,6 +201,21 @@ public class MainActivity extends AppCompatActivity {
                 editor.commit();
             }
         });
+
+        cameraShot.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v)
+            {
+                final Map<String, String> data = new HashMap<String, String>();
+                data.put("message_type", "GetPicture");
+                new Thread() {
+                    @Override
+                    public void run() {
+                        sendToServer(data);
+                    }
+                }.start();
+            }
+        });
+
     }
 
     @Override

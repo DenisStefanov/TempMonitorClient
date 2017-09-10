@@ -95,6 +95,9 @@ public class FCMMessagingService extends FirebaseMessagingService{
                 editor.putBoolean("LimitsChanged", !prefs.getBoolean("LimitsChanged", false));
                 editor.commit();
             }
+            if (type.equals("PictureURL")){
+                sendNotification(msg.getData().get("note"));
+            }
 
         } catch (Exception e) {e.printStackTrace();}
     }
