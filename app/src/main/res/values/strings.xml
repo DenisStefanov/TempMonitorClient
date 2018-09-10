@@ -9,7 +9,7 @@
     <string name="action_configSrv">Upload config to the Server</string>
     <string name="action_configSrvGet">Get config from the Server</string>
     <string name="action_gpio17">GPIO 17</string>
-    <string name="action_gpio18">GPIO 18</string>
+    <string name="action_gpio18">Heat On</string>
     <string name="action_gpio27">GPIO 27</string>
     <string name="action_gpio22">GPIO 22</string>
     <string name="action_readActuals">Read GPIO actuals</string>

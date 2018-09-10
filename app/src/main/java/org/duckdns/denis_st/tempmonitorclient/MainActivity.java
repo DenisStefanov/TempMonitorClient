@@ -81,10 +81,11 @@ public class MainActivity extends AppCompatActivity {
             String srvDate = prefs.getString("LastUpdatedSrv", "Unknown");
             String stillTemp = prefs.getString("stillTemp", "0.0");
             String towerTemp = prefs.getString("towerTemp", "0.0");
+            Boolean liqLevel = prefs.getBoolean("liqLevel", false);
 
             ViewGroup myLayout = (ViewGroup) findViewById(R.id.include);
             DrawView drawView = new DrawView(this, stillTemp, prefs.getString("stillTempThreshold", "0.0"),
-                    towerTemp, prefs.getString("towerTempThreshold", "0.0"));
+                    towerTemp, prefs.getString("towerTempThreshold", "0.0"), liqLevel);
             myLayout.addView(drawView);
 
             long diffSec = Math.abs(lclDate.getTime() - nowDate.getTime()) / 1000;
