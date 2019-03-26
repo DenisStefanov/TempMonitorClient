@@ -1,6 +1,6 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <EditTextPreference
-        android:defaultValue="10"
+        android:defaultValue="300"
         android:key="ConnectionTimeoutPreference"
         android:selectAllOnFocus="true"
         android:singleLine="true"

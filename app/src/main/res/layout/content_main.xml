@@ -94,4 +94,20 @@
         android:layout_marginLeft="130dp"
         android:layout_marginTop="40dp"
         android:id="@+id/editTowerTempFix" />
+
+    <CheckBox
+        android:id="@+id/checkBoxAutoStill"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/editStillTempFix"
+        android:layout_below="@+id/editStillTempFix"
+        android:text="Auto" />
+
+    <CheckBox
+        android:id="@+id/checkBoxAutoTower"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/editTowerTempFix"
+        android:layout_below="@+id/editTowerTempFix"
+        android:text="Auto" />
 </RelativeLayout>
