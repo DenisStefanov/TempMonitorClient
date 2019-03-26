@@ -123,6 +123,8 @@ public class GcmIntentService extends IntentService {
 				editor.putString("towerTempThreshold", extras.getString("towerTempThreshold", "0.0"));
 				editor.putBoolean("stillToggleChecked", Boolean.valueOf(extras.getString("stillToggle", null)));
 				editor.putBoolean("towerToggleChecked", Boolean.valueOf(extras.getString("towerToggle", null)));
+				editor.putBoolean("stillAutoChecked", Boolean.valueOf(extras.getString("stillAutoToggle", null)));
+                editor.putBoolean("towerAutoChecked", Boolean.valueOf(extras.getString("towerAutoToggle", null)));
                 editor.putBoolean("LimitsChanged", !prefs.getBoolean("LimitsChanged", false));
 				editor.commit();
 			}

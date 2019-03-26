@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.preference.PreferenceManager;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -109,7 +110,11 @@ public class MainActivity extends AppCompatActivity {
             TextView TowerTempFix = (TextView) findViewById(R.id.editTowerTempFix);
             ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
             ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
+            CheckBox toggleStillAuto = (CheckBox) findViewById(R.id.checkBoxAutoStill);
+            CheckBox toggleTowerAuto = (CheckBox) findViewById(R.id.checkBoxAutoTower);
 
+            toggleStillAuto.setChecked(prefs.getBoolean("stillAutoChecked", false));
+            toggleTowerAuto.setChecked(prefs.getBoolean("towerAutoChecked", false));
             toggleStill.setChecked(prefs.getBoolean("stillToggleChecked", false));
             toggleTower.setChecked(prefs.getBoolean("towerToggleChecked", false));
             StillTempFix.setText(prefs.getString("stillTempThreshold", "0.0"));
@@ -165,7 +170,11 @@ public class MainActivity extends AppCompatActivity {
         ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
         TextView StillTempFix = (TextView)findViewById(R.id.editStillTempFix);
         TextView TowerTempFix = (TextView)findViewById(R.id.editTowerTempFix);
+        CheckBox toggleStillAuto = (CheckBox) findViewById(R.id.checkBoxAutoStill);
+        CheckBox toggleTowerAuto = (CheckBox) findViewById(R.id.checkBoxAutoTower);
 
+        toggleStillAuto.setChecked(prefs.getBoolean("stillAutoChecked", false));
+        toggleTowerAuto.setChecked(prefs.getBoolean("towerAutoChecked", false));
         toggleStill.setChecked(prefs.getBoolean("stillToggleChecked", false));
         toggleTower.setChecked(prefs.getBoolean("towerToggleChecked", false));
         StillTempFix.setText(prefs.getString("stillTempThreshold", "0.0"));
@@ -213,6 +222,22 @@ public class MainActivity extends AppCompatActivity {
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putString("towerTempThreshold", (isChecked)?TowerTempFix.getText().toString():"0.0");
                 editor.putBoolean("towerToggleChecked", isChecked);
+                editor.commit();
+            }
+        });
+
+        toggleStillAuto.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putBoolean("stillAutoChecked", isChecked);
+                editor.commit();
+            }
+        });
+
+        toggleTowerAuto.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putBoolean("towerAutoChecked", isChecked);
                 editor.commit();
             }
         });
@@ -311,12 +336,17 @@ public class MainActivity extends AppCompatActivity {
             Data.putString("absolutestill", prefs.getString("stillTempThreshold", "0.0"));
             Data.putString("fixtemptower", String.valueOf(prefs.getBoolean("towerToggleChecked", false)));
             Data.putString("absolutetower", prefs.getString("towerTempThreshold", "0.0"));
+            Data.putString("fixtemptowerbypower", String.valueOf(prefs.getBoolean("towerAutoChecked", false)));
+            Data.putString("fixtempstillbypower", String.valueOf(prefs.getBoolean("stillAutoChecked", false)));
 
             SharedPreferences.Editor editor = prefs.edit();
             editor.putString("stillTempThreshold", Data.getString("absolutestill", "0.0"));
             editor.putString("towerTempThreshold", Data.getString("absolutetower", "0.0"));
             editor.putBoolean("stillToggleChecked", Boolean.valueOf(Data.getString("fixtempstill", null)));
             editor.putBoolean("towerToggleChecked", Boolean.valueOf(Data.getString("fixtemptower", null)));
+            editor.putBoolean("stillAutoChecked", Boolean.valueOf(Data.getString("fixtempstillbypower", null)));
+            editor.putBoolean("towerAutoChecked", Boolean.valueOf(Data.getString("fixtemptowerbypower", null)));
+
             editor.commit();
 
             new Thread() {
