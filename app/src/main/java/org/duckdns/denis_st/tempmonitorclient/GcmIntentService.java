@@ -34,8 +34,10 @@ public class GcmIntentService extends IntentService {
         try {
             if (notifyMsg) {
                 if (vibrate) {
+					SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+					Integer vibLen = Integer.parseInt(prefs.getString("VibrateLengthPreference", "1000"));
                     Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-                    v.vibrate(1000);
+                    v.vibrate(vibLen);
                 }
                 Context ctx = getBaseContext();
 
@@ -95,28 +97,45 @@ public class GcmIntentService extends IntentService {
             String ringtone = prefs.getString("notifications_new_message_ringtone", null);
             restartTimer(ringtone, delay);
 
+			//System.out.println("Incoming message type " + type);
+
 			if (type.equals("upd") || type.equals("alarma")) {
 				Date nowDate = Calendar.getInstance().getTime();
                 SharedPreferences.Editor editor = prefs.edit();
 				editor.putString("LastUpdatedSrv", extras.getString("LastUpdated", null));
 				editor.putString("stillTemp", extras.getString("tempStill", "0.0"));
 				editor.putString("towerTemp", extras.getString("tempTower", "0.0"));
-				String s = extras.getString("liqLevelSensor", "0");
+				editor.putString("coolerTemp", extras.getString("tempCooler", "0.0"));
 				editor.putBoolean("liqLevel", Boolean.parseBoolean(extras.getString("liqLevelSensor", "0")));
 				editor.putString("LastUpdatedLcl", new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").format(nowDate));
+				editor.putString("pressureVal", extras.getString("pressureVal", ""));
                 editor.putBoolean("ReadingsChanged", !prefs.getBoolean("ReadingsChanged", false));
+
+				editor.putString("GPIO17", extras.getString("coolerGPIO", ""));
+				editor.putString("GPIO18", extras.getString("heatGPIO", ""));
+				editor.putBoolean("GPIOCheckboxChanged", !prefs.getBoolean("GPIOCheckboxChanged", false));
+
 				editor.commit();
             }
             if (type.equals("alarma")) {
                 Notify("ALARMA", ringtone, prefs.getBoolean("notifications_new_message", true), prefs.getBoolean("notifications_new_message_vibrate", true));
 			}
-			if (type.equals("Notify")){
-                Notify(extras.getString("note", null), null, true, false);
+			if (type.equals("NotifyGPIO")){
+                //Notify(extras.getString("note", null), null, true, false);
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putString("GPIO" + extras.getString("GPIO", ""), extras.getString("State", ""));
                 editor.putBoolean("GPIOCheckboxChanged", !prefs.getBoolean("GPIOCheckboxChanged", false));
                 editor.commit();
             }
+
+			if (type.equals("NotifyDIMMER")){
+				//Notify(extras.getString("note", null), null, true, false);
+				SharedPreferences.Editor editor = prefs.edit();
+				editor.putString("DIMMER", extras.getString("DIMMER", "0"));
+				//editor.putBoolean("DimmerChanged", !prefs.getBoolean("DimmerChanged", false));
+				editor.commit();
+			}
+
             if (type.equals("ServerConfig")){
 				SharedPreferences.Editor editor = prefs.edit();
 				editor.putString("stillTempThreshold", extras.getString("stillTempThreshold", "0.0"));

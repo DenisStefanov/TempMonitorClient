@@ -5,14 +5,18 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.preference.PreferenceManager;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -24,6 +28,8 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static android.R.id.list;
 
@@ -32,7 +38,24 @@ public class MainActivity extends AppCompatActivity {
     private String regid = null;
     private SharedPreferences prefs;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
-    private Menu MainMenu = null;
+
+    private ToggleButton toggleStill;
+    private ToggleButton toggleTower;
+    private TextView StillTempFix;
+    private TextView TowerTempFix;
+    private CheckBox toggleStillAuto;
+    private CheckBox toggleTowerAuto;
+    private SeekBar dimmerControlBar;
+    private TextView dimmerTextVal;
+    private TextView pressureTextVal;
+    private Button buttonDimUP;
+    private Button buttonDimDN;
+
+    private MenuItem gpio17;
+    private MenuItem gpio18;
+    private MenuItem gpio22;
+    private MenuItem gpio27;
+
 
     private void registerPreferenceListener()
     {
@@ -46,6 +69,9 @@ public class MainActivity extends AppCompatActivity {
                 }
                 if (Arrays.asList("GPIOCheckboxChanged").contains(key)) {
                     updateGPIO();
+                }
+                if (Arrays.asList("DIMMER").contains(key)) {
+                    updateDIMMER();
                 }
             }
         };
@@ -61,10 +87,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateGPIO()
     {
-        MenuItem gpio17 = MainMenu.findItem(R.id.action_gpio17);
-        MenuItem gpio18 = MainMenu.findItem(R.id.action_gpio18);
-        MenuItem gpio22 = MainMenu.findItem(R.id.action_gpio22);
-        MenuItem gpio27 = MainMenu.findItem(R.id.action_gpio27);
         gpio17.setChecked((prefs.getString("GPIO17", "").equals("On"))?true:false);
         gpio18.setChecked((prefs.getString("GPIO18", "").equals("On"))?true:false);
         gpio22.setChecked((prefs.getString("GPIO22", "").equals("On"))?true:false);
@@ -82,7 +104,9 @@ public class MainActivity extends AppCompatActivity {
             String srvDate = prefs.getString("LastUpdatedSrv", "Unknown");
             String stillTemp = prefs.getString("stillTemp", "0.0");
             String towerTemp = prefs.getString("towerTemp", "0.0");
+            String coolerTemp = prefs.getString("coolerTemp", "0.0");
             Boolean liqLevel = prefs.getBoolean("liqLevel", false);
+            String pressure = prefs.getString("pressureVal", "0.0");
 
             ViewGroup myLayout = (ViewGroup) findViewById(R.id.include);
             DrawView drawView = new DrawView(this, stillTemp, prefs.getString("stillTempThreshold", "0.0"),
@@ -99,6 +123,10 @@ public class MainActivity extends AppCompatActivity {
             TowerTemp.setText(towerTemp);
             TextView StillTemp = (TextView) findViewById(R.id.tempStillVal);
             StillTemp.setText(stillTemp);
+            TextView CoolerTemp = (TextView) findViewById(R.id.tempCoolerVal);
+            CoolerTemp.setText("Cooler:" + coolerTemp);
+            TextView PressureTemp = (TextView) findViewById(R.id.pressureTextVal);
+            PressureTemp.setText("Press:" + pressure);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -106,24 +134,33 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateLimits() {
         try {
-            TextView StillTempFix = (TextView) findViewById(R.id.editStillTempFix);
-            TextView TowerTempFix = (TextView) findViewById(R.id.editTowerTempFix);
-            ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
-            ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
-            CheckBox toggleStillAuto = (CheckBox) findViewById(R.id.checkBoxAutoStill);
-            CheckBox toggleTowerAuto = (CheckBox) findViewById(R.id.checkBoxAutoTower);
-
             toggleStillAuto.setChecked(prefs.getBoolean("stillAutoChecked", false));
             toggleTowerAuto.setChecked(prefs.getBoolean("towerAutoChecked", false));
             toggleStill.setChecked(prefs.getBoolean("stillToggleChecked", false));
             toggleTower.setChecked(prefs.getBoolean("towerToggleChecked", false));
             StillTempFix.setText(prefs.getString("stillTempThreshold", "0.0"));
             TowerTempFix.setText(prefs.getString("towerTempThreshold", "0.0"));
+
+            toggleStillAuto.setEnabled(true);
+            toggleTowerAuto.setEnabled(true);
+            toggleStill.setEnabled(true);
+            toggleTower.setEnabled(true);
+            StillTempFix.setEnabled(!toggleStill.isChecked());
+            TowerTempFix.setEnabled(!toggleTower.isChecked());
+
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private void updateDIMMER() {
+        try {
+            dimmerControlBar.setProgress(Integer.parseInt(prefs.getString("DIMMER", "0")));
+            dimmerTextVal.setText("Dimmer:" + Double.toString(Math.round(Double.parseDouble(prefs.getString("DIMMER", "0")) / 1.2)));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     private String rndId() {
         char[] chars = "abcdefghijklmnopqrstuvwxyz".toCharArray();
         StringBuilder sb = new StringBuilder();
@@ -153,6 +190,36 @@ public class MainActivity extends AppCompatActivity {
                 }
     }
 
+    private void serverReconfigure(){
+        final Bundle Data = new Bundle();
+
+        Data.putString("message_type", "ServerConfig");
+        Data.putString("fixtempstill", String.valueOf(toggleStill.isChecked()));
+        Data.putString("fixtemptower", String.valueOf(toggleTower.isChecked()));
+        Data.putString("absolutestill", StillTempFix.getText().toString());
+        Data.putString("absolutetower", TowerTempFix.getText().toString());
+        Data.putString("fixtemptowerbypower", String.valueOf(toggleTowerAuto.isChecked()));
+        Data.putString("fixtempstillbypower", String.valueOf(toggleStillAuto.isChecked()));
+
+        new Thread() {
+            @Override
+            public void run() {sendToServer(Data);}
+        }.start();
+
+        toggleTower.setEnabled(false);
+        toggleStill.setEnabled(false);
+        toggleTowerAuto.setEnabled(false);
+        toggleStillAuto.setEnabled(false);
+    }
+
+    class UpdateReadings extends TimerTask {
+        public void run() {
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putBoolean("ReadingsChanged", !prefs.getBoolean("ReadingsChanged", false));
+            editor.commit();
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -166,12 +233,20 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        ToggleButton toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
-        ToggleButton toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
-        TextView StillTempFix = (TextView)findViewById(R.id.editStillTempFix);
-        TextView TowerTempFix = (TextView)findViewById(R.id.editTowerTempFix);
-        CheckBox toggleStillAuto = (CheckBox) findViewById(R.id.checkBoxAutoStill);
-        CheckBox toggleTowerAuto = (CheckBox) findViewById(R.id.checkBoxAutoTower);
+//        Timer updateTimer = new Timer();
+//        TimerTask updateReadings = new UpdateReadings();
+//        updateTimer.scheduleAtFixedRate(updateReadings, 1000, 1000);
+
+        toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
+        toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
+        StillTempFix = (TextView)findViewById(R.id.editStillTempFix);
+        TowerTempFix = (TextView)findViewById(R.id.editTowerTempFix);
+        toggleStillAuto = (CheckBox) findViewById(R.id.checkBoxAutoStill);
+        toggleTowerAuto = (CheckBox) findViewById(R.id.checkBoxAutoTower);
+        dimmerControlBar = (SeekBar) findViewById(R.id.seekBar);
+        dimmerTextVal = (TextView) findViewById(R.id.dimmerTextVal);
+        buttonDimUP = (Button) findViewById(R.id.buttonDimUP);
+        buttonDimDN = (Button) findViewById(R.id.buttonDimDN);
 
         toggleStillAuto.setChecked(prefs.getBoolean("stillAutoChecked", false));
         toggleTowerAuto.setChecked(prefs.getBoolean("towerAutoChecked", false));
@@ -198,31 +273,67 @@ public class MainActivity extends AppCompatActivity {
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_UP){
                     updateReadings();
-                    updateLimits();
+                    //updateLimits();
+                    //updateDIMMER();
                 }
                 return true;
             }
         });
 
+        final Bundle data = new Bundle();
+        data.putString("message_type", "ReadDimmer");
+        new Thread() {
+            @Override
+            public void run() {
+                sendToServer(data);
+            }
+        }.start();
+
+        buttonDimUP.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                final Bundle data = new Bundle();
+                data.putString("message_type", "DimmerControl");
+                data.putString("DIMMER", "UP");
+                new Thread() {
+                    @Override
+                    public void run() {
+                        sendToServer(data);
+                    }
+                }.start();
+            }
+        });
+
+        buttonDimDN.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                final Bundle data = new Bundle();
+                data.putString("message_type", "DimmerControl");
+                data.putString("DIMMER", "DN");
+                new Thread() {
+                    @Override
+                    public void run() {
+                        sendToServer(data);
+                    }
+                }.start();
+            }
+        });
+
         toggleStill.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                TextView StillTempFix = (TextView)findViewById(R.id.editStillTempFix);
-                StillTempFix.setEnabled(!isChecked);
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString("stillTempThreshold", (isChecked)?StillTempFix.getText().toString():"0.0");
-                editor.putBoolean("stillToggleChecked", isChecked);
-                editor.commit();
+                //SharedPreferences.Editor editor = prefs.edit();
+                //editor.putString("stillTempThreshold", (isChecked)?StillTempFix.getText().toString():"0.0");
+                //editor.putBoolean("stillToggleChecked", isChecked);
+                //editor.commit();
+                serverReconfigure();
             }
         });
 
         toggleTower.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                TextView TowerTempFix = (TextView)findViewById(R.id.editTowerTempFix);
-                TowerTempFix.setEnabled(!isChecked);
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString("towerTempThreshold", (isChecked)?TowerTempFix.getText().toString():"0.0");
-                editor.putBoolean("towerToggleChecked", isChecked);
-                editor.commit();
+                //SharedPreferences.Editor editor = prefs.edit();
+                //editor.putString("towerTempThreshold", (isChecked)?TowerTempFix.getText().toString():"0.0");
+                //editor.putBoolean("towerToggleChecked", isChecked);
+                //editor.commit();
+                serverReconfigure();
             }
         });
 
@@ -231,6 +342,7 @@ public class MainActivity extends AppCompatActivity {
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putBoolean("stillAutoChecked", isChecked);
                 editor.commit();
+                serverReconfigure();
             }
         });
 
@@ -239,6 +351,32 @@ public class MainActivity extends AppCompatActivity {
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putBoolean("towerAutoChecked", isChecked);
                 editor.commit();
+                serverReconfigure();
+            }
+        });
+
+        dimmerControlBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+                 public void onStopTrackingTouch(SeekBar seekBar) {
+                    System.out.println("onStop Tracking touch ");
+                    if (seekBar.getProgress() < 5)
+                        seekBar.setProgress(5);
+                    //Toast.makeText(getApplicationContext(), String.valueOf(progress), Toast.LENGTH_LONG).show();
+                    final Bundle data = new Bundle();
+                    data.putString("message_type", "DimmerControl");
+                    data.putString("DIMMER", Integer.toString(seekBar.getProgress()));
+                    new Thread() {
+                    @Override
+                    public void run() {
+                        sendToServer(data);
+                    }
+                }.start();
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
             }
         });
     }
@@ -248,6 +386,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         updateReadings();
         updateLimits();
+        updateDIMMER();
     }
 
     @Override
@@ -264,7 +403,11 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        MainMenu = menu;
+
+        gpio17 = menu.findItem(R.id.action_gpio17);
+        gpio18 = menu.findItem(R.id.action_gpio18);
+        gpio22 = menu.findItem(R.id.action_gpio22);
+        gpio27 = menu.findItem(R.id.action_gpio27);
 
         final Bundle data = new Bundle();
         data.putString("message_type", "ReadActuals");
@@ -329,31 +472,7 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_configSrv) {
-            final Bundle Data = new Bundle();
-
-            Data.putString("message_type", "ServerConfig");
-            Data.putString("fixtempstill", String.valueOf(prefs.getBoolean("stillToggleChecked", false)));
-            Data.putString("absolutestill", prefs.getString("stillTempThreshold", "0.0"));
-            Data.putString("fixtemptower", String.valueOf(prefs.getBoolean("towerToggleChecked", false)));
-            Data.putString("absolutetower", prefs.getString("towerTempThreshold", "0.0"));
-            Data.putString("fixtemptowerbypower", String.valueOf(prefs.getBoolean("towerAutoChecked", false)));
-            Data.putString("fixtempstillbypower", String.valueOf(prefs.getBoolean("stillAutoChecked", false)));
-
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString("stillTempThreshold", Data.getString("absolutestill", "0.0"));
-            editor.putString("towerTempThreshold", Data.getString("absolutetower", "0.0"));
-            editor.putBoolean("stillToggleChecked", Boolean.valueOf(Data.getString("fixtempstill", null)));
-            editor.putBoolean("towerToggleChecked", Boolean.valueOf(Data.getString("fixtemptower", null)));
-            editor.putBoolean("stillAutoChecked", Boolean.valueOf(Data.getString("fixtempstillbypower", null)));
-            editor.putBoolean("towerAutoChecked", Boolean.valueOf(Data.getString("fixtemptowerbypower", null)));
-
-            editor.commit();
-
-            new Thread() {
-                @Override
-                public void run() {sendToServer(Data);}
-            }.start();
-
+            serverReconfigure();
             return true;
         }
         if (id == R.id.action_configSrvGet) {

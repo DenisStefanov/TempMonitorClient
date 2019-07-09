@@ -24,4 +24,12 @@
         android:key="notifications_new_message_vibrate"
         android:title="@string/pref_title_vibrate" />
 
+    <EditTextPreference
+        android:defaultValue="3000"
+        android:key="VibrateLengthPreference"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="VibrateLengthPreference"
+        android:numeric="integer"/>
+
 </PreferenceScreen>
