@@ -109,11 +109,9 @@ public class GcmIntentService extends IntentService {
 				editor.putBoolean("liqLevel", Boolean.parseBoolean(extras.getString("liqLevelSensor", "0")));
 				editor.putString("LastUpdatedLcl", new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").format(nowDate));
 				editor.putString("pressureVal", extras.getString("pressureVal", ""));
-                editor.putBoolean("ReadingsChanged", !prefs.getBoolean("ReadingsChanged", false));
 
 				editor.putString("GPIO17", extras.getString("coolerGPIO", ""));
 				editor.putString("GPIO18", extras.getString("heatGPIO", ""));
-				editor.putBoolean("GPIOCheckboxChanged", !prefs.getBoolean("GPIOCheckboxChanged", false));
 
 				editor.commit();
             }
@@ -122,9 +120,9 @@ public class GcmIntentService extends IntentService {
 			}
 			if (type.equals("NotifyGPIO")){
                 //Notify(extras.getString("note", null), null, true, false);
+				//System.out.println("NotifyGPIO incoming " + "GPIO" + extras.getString("GPIO", "") + extras.getString("State", ""));
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putString("GPIO" + extras.getString("GPIO", ""), extras.getString("State", ""));
-                editor.putBoolean("GPIOCheckboxChanged", !prefs.getBoolean("GPIOCheckboxChanged", false));
                 editor.commit();
             }
 
@@ -132,7 +130,6 @@ public class GcmIntentService extends IntentService {
 				//Notify(extras.getString("note", null), null, true, false);
 				SharedPreferences.Editor editor = prefs.edit();
 				editor.putString("DIMMER", extras.getString("DIMMER", "0"));
-				//editor.putBoolean("DimmerChanged", !prefs.getBoolean("DimmerChanged", false));
 				editor.commit();
 			}
 
@@ -144,7 +141,6 @@ public class GcmIntentService extends IntentService {
 				editor.putBoolean("towerToggleChecked", Boolean.valueOf(extras.getString("towerToggle", null)));
 				editor.putBoolean("stillAutoChecked", Boolean.valueOf(extras.getString("stillAutoToggle", null)));
                 editor.putBoolean("towerAutoChecked", Boolean.valueOf(extras.getString("towerAutoToggle", null)));
-                editor.putBoolean("LimitsChanged", !prefs.getBoolean("LimitsChanged", false));
 				editor.commit();
 			}
 

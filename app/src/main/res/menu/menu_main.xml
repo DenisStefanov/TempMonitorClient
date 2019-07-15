@@ -33,34 +33,6 @@
         android:title="@string/action_configSrvGet"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_gpio17"
-        android:orderInCategory="100"
-        android:title="@string/action_gpio17"
-        app:showAsAction="never"
-        android:checkable="true"
-        android:enabled="false"/>
-    <item
-        android:id="@+id/action_gpio18"
-        android:orderInCategory="100"
-        android:title="@string/action_gpio18"
-        app:showAsAction="never"
-        android:checkable="true"
-        android:enabled="false"/>
-    <item
-        android:id="@+id/action_gpio27"
-        android:orderInCategory="100"
-        android:title="@string/action_gpio27"
-        app:showAsAction="never"
-        android:checkable="true"
-        android:enabled="false"/>
-    <item
-        android:id="@+id/action_gpio22"
-        android:orderInCategory="100"
-        android:title="@string/action_gpio22"
-        app:showAsAction="never"
-        android:checkable="true"
-        android:enabled="false"/>
-    <item
         android:id="@+id/action_readActuals"
         android:orderInCategory="100"
         android:title="@string/action_readActuals"

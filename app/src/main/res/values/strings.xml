@@ -8,10 +8,10 @@
     <string name="action_stopSrv">Stop Server</string>
     <string name="action_configSrv">Upload config to the Server</string>
     <string name="action_configSrvGet">Get config from the Server</string>
-    <string name="action_gpio17">Cooler Fan</string>
-    <string name="action_gpio18">Heat</string>
-    <string name="action_gpio27">GPIO 27</string>
-    <string name="action_gpio22">GPIO 22</string>
+    <string name="gpio17">Cooler Fan</string>
+    <string name="gpio18">Heat</string>
+    <string name="gpio27">GPIO 27</string>
+    <string name="gpio22">GPIO 22</string>
     <string name="action_readActuals">Read GPIO actuals</string>
     <string name="pref_header_general">General</string>
     <string name="pref_header_notifications">Notifications</string>
@@ -20,4 +20,6 @@
     <string name="pref_title_ringtone">Ringtone</string>
     <string name="pref_ringtone_silent">Silent</string>
     <string name="pref_title_vibrate">Vibrate</string>
+    <string name="title_activity_main2">TempMonitorClient</string>
+    <string name="title_activity_main3">Main3Activity</string>
 </resources>
