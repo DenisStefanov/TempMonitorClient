@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
-import static org.duckdns.denis_st.tempmonitorclient.ServerConnection.sendToServer;
 import static org.duckdns.denis_st.tempmonitorclient.ServerConnection.serverReconfigure;
 
 public class MainActivity extends AppCompatActivity {
@@ -32,24 +31,20 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences prefs;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
 
-    private ToggleButton toggleStill;
-    private ToggleButton toggleTower;
-    private TextView StillTempFix;
-    private TextView TowerTempFix;
-    private CheckBox toggleStillAuto;
-    private CheckBox toggleTowerAuto;
+    private ToggleButton toggleStill, toggleTower;
+    private TextView StillTempFix, TowerTempFix;
+    private CheckBox toggleStillAuto, toggleTowerAuto;
 
     private void registerPreferenceListener()
     {
         listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
                 if (Arrays.asList("stillTemp", "towerTemp", "coolerTemp", "liqLevel",
-                        "LastUpdatedLcl", "pressureVal").contains(key)) {
-                    updateReadings();
-                }
-                if (Arrays.asList("stillTempThreshold", "towerTempThreshold", "stillToggleChecked",
-                        "towerToggleChecked", "stillAutoChecked", "towerAutoChecked").contains(key)) {
+                        "LastUpdatedLcl", "pressureVal", "stillTempThreshold", "towerTempThreshold",
+                        "stillToggleChecked", "towerToggleChecked", "stillAutoChecked",
+                        "towerAutoChecked").contains(key)) {
                     updateLimits();
+                    updateReadings();
                 }
             }
         };
@@ -94,14 +89,38 @@ public class MainActivity extends AppCompatActivity {
             TextView PressureTemp = (TextView) findViewById(R.id.pressureTextVal);
             PressureTemp.setText("Press:" + pressure);
 
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void composeMessage(Bundle msgData){
+    private void togglesEnable(boolean enable){
+        toggleTower.setEnabled(enable);
+        toggleStill.setEnabled(enable);
+        toggleTowerAuto.setEnabled(enable);
+        toggleStillAuto.setEnabled(enable);
+    }
 
+    private void toggleCheck(){
+        toggleStillAuto.setChecked(prefs.getBoolean("stillAutoChecked", false));
+        toggleTowerAuto.setChecked(prefs.getBoolean("towerAutoChecked", false));
+        toggleStill.setChecked(prefs.getBoolean("stillToggleChecked", false));
+        toggleTower.setChecked(prefs.getBoolean("towerToggleChecked", false));
+    }
+
+    private void setTempFix(){
+	if (toggleTower.isEnabled) {
+	        TowerTempFix.setText(prefs.getString("towerTempThreshold", "0.0"));
+	}
+        if (toggleStill.isEnabled) {
+		StillTempFix.setText(prefs.getString("stillTempThreshold", "0.0"));
+	}
+        
+        StillTempFix.setEnabled(!toggleStill.isChecked());
+        TowerTempFix.setEnabled(!toggleTower.isChecked());
+    }
+
+    private void composeMessage(Bundle msgData){
         msgData.putString("message_type", "ServerConfig");
         msgData.putString("fixtempstill", String.valueOf(toggleStill.isChecked()));
         msgData.putString("fixtemptower", String.valueOf(toggleTower.isChecked()));
@@ -109,28 +128,14 @@ public class MainActivity extends AppCompatActivity {
         msgData.putString("absolutetower", TowerTempFix.getText().toString());
         msgData.putString("fixtemptowerbypower", String.valueOf(toggleTowerAuto.isChecked()));
         msgData.putString("fixtempstillbypower", String.valueOf(toggleStillAuto.isChecked()));
-
-        toggleTower.setEnabled(false);
-        toggleStill.setEnabled(false);
-        toggleTowerAuto.setEnabled(false);
-        toggleStillAuto.setEnabled(false);
+        togglesEnable(false);
     }
 
     private void updateLimits() {
         try {
-            toggleStillAuto.setChecked(prefs.getBoolean("stillAutoChecked", false));
-            toggleTowerAuto.setChecked(prefs.getBoolean("towerAutoChecked", false));
-            toggleStill.setChecked(prefs.getBoolean("stillToggleChecked", false));
-            toggleTower.setChecked(prefs.getBoolean("towerToggleChecked", false));
-            StillTempFix.setText(prefs.getString("stillTempThreshold", "0.0"));
-            TowerTempFix.setText(prefs.getString("towerTempThreshold", "0.0"));
-
-            toggleStillAuto.setEnabled(true);
-            toggleTowerAuto.setEnabled(true);
-            toggleStill.setEnabled(true);
-            toggleTower.setEnabled(true);
-            StillTempFix.setEnabled(!toggleStill.isChecked());
-            TowerTempFix.setEnabled(!toggleTower.isChecked());
+            toggleCheck();
+            setTempFix();
+            togglesEnable(true);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -170,10 +175,6 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-//        Timer updateTimer = new Timer();
-//        TimerTask updateReadings = new UpdateReadings();
-//        updateTimer.scheduleAtFixedRate(updateReadings, 1000, 1000);
-
         toggleStill = (ToggleButton) findViewById(R.id.ToggleStillBtn);
         toggleTower = (ToggleButton) findViewById(R.id.ToggleTowerBtn);
         StillTempFix = (TextView)findViewById(R.id.editStillTempFix);
@@ -181,14 +182,8 @@ public class MainActivity extends AppCompatActivity {
         toggleStillAuto = (CheckBox) findViewById(R.id.checkBoxAutoStill);
         toggleTowerAuto = (CheckBox) findViewById(R.id.checkBoxAutoTower);
 
-        toggleStillAuto.setChecked(prefs.getBoolean("stillAutoChecked", false));
-        toggleTowerAuto.setChecked(prefs.getBoolean("towerAutoChecked", false));
-        toggleStill.setChecked(prefs.getBoolean("stillToggleChecked", false));
-        toggleTower.setChecked(prefs.getBoolean("towerToggleChecked", false));
-        StillTempFix.setText(prefs.getString("stillTempThreshold", "0.0"));
-        TowerTempFix.setText(prefs.getString("towerTempThreshold", "0.0"));
-        StillTempFix.setEnabled(!toggleStill.isChecked());
-        TowerTempFix.setEnabled(!toggleTower.isChecked());
+        toggleCheck();
+        setTempFix();
 
         tmgcm = new GcmRegistrar(getApplicationContext());
         gcm = GoogleCloudMessaging.getInstance(MainActivity.this);
@@ -222,67 +217,53 @@ public class MainActivity extends AppCompatActivity {
 
         toggleStill.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                //SharedPreferences.Editor editor = prefs.edit();
-                //editor.putString("stillTempThreshold", (isChecked)?StillTempFix.getText().toString():"0.0");
-                //editor.putBoolean("stillToggleChecked", isChecked);
-                //editor.commit();
-                final Bundle Data = new Bundle();
-                composeMessage(Data);
-                serverReconfigure(gcm, Data);
+                if (buttonView.isPressed()) {
+                    final Bundle Data = new Bundle();
+                    composeMessage(Data);
+                    serverReconfigure(gcm, Data);
+                }
            }
         });
 
         toggleTower.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                //SharedPreferences.Editor editor = prefs.edit();
-                //editor.putString("towerTempThreshold", (isChecked)?TowerTempFix.getText().toString():"0.0");
-                //editor.putBoolean("towerToggleChecked", isChecked);
-                //editor.commit();
-                final Bundle Data = new Bundle();
-                composeMessage(Data);
-                serverReconfigure(gcm, Data);
+                if (buttonView.isPressed()) {
+                    final Bundle Data = new Bundle();
+                    composeMessage(Data);
+                    serverReconfigure(gcm, Data);
+                }
             }
         });
 
         toggleStillAuto.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putBoolean("stillAutoChecked", isChecked);
-                editor.commit();
-                final Bundle Data = new Bundle();
-                composeMessage(Data);
-                serverReconfigure(gcm, Data);
+                if (buttonView.isPressed()) {
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putBoolean("stillAutoChecked", isChecked);
+                    editor.commit();
+                    final Bundle Data = new Bundle();
+                    composeMessage(Data);
+                    serverReconfigure(gcm, Data);
+                }
             }
         });
 
         toggleTowerAuto.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putBoolean("towerAutoChecked", isChecked);
-                editor.commit();
-                final Bundle Data = new Bundle();
-                composeMessage(Data);
-                serverReconfigure(gcm, Data);
+                if (buttonView.isPressed()) {
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putBoolean("towerAutoChecked", isChecked);
+                    editor.commit();
+                    final Bundle Data = new Bundle();
+                    composeMessage(Data);
+                    serverReconfigure(gcm, Data);
+                }
             }
         });
 
-        final Bundle dataAct = new Bundle();
-        dataAct.putString("message_type", "ReadActuals");
-        new Thread() {
-            @Override
-            public void run() {
-                sendToServer(gcm, dataAct);
-            }
-        }.start();
-
         final Bundle dataDim = new Bundle();
         dataDim.putString("message_type", "ReadDimmer");
-        new Thread() {
-            @Override
-            public void run() {
-                sendToServer(gcm, dataDim);
-            }
-        }.start();
+        serverReconfigure(gcm, dataDim);
     }
 
     @Override
@@ -290,7 +271,6 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         updateReadings();
         updateLimits();
-        //updateDIMMER();
     }
 
     @Override
@@ -307,7 +287,6 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
-
         return true;
     }
 
@@ -331,34 +310,19 @@ public class MainActivity extends AppCompatActivity {
                 showToastinMain("RegID is empty. Will not update Server");
                 return false;
             }
-            new Thread() {
-                @Override
-                public void run() {
-                    sendToServer(gcm, data);
-                }
-            }.start();
+            serverReconfigure(gcm, data);
             return true;
         }
         if (id == R.id.action_startSrv) {
             final Bundle data = new Bundle();
             data.putString("message_type", "StartServer");
-            new Thread() {
-                @Override
-                public void run() {
-                    sendToServer(gcm, data);
-                }
-            }.start();
+            serverReconfigure(gcm, data);
             return true;
         }
         if (id == R.id.action_stopSrv) {
             final Bundle data = new Bundle();
             data.putString("message_type", "StopServer");
-            new Thread() {
-                @Override
-                public void run() {
-                    sendToServer(gcm, data);
-                }
-            }.start();
+            serverReconfigure(gcm, data);
             return true;
         }
         if (id == R.id.action_configSrv) {
@@ -370,24 +334,7 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_configSrvGet) {
             final Bundle data = new Bundle();
             data.putString("message_type", "ConfigServerGet");
-            new Thread() {
-                @Override
-                public void run() {
-                    sendToServer(gcm, data);
-                }
-            }.start();
-            return true;
-        }
-
-        if (id == R.id.action_readActuals) {
-            final Bundle data = new Bundle();
-            data.putString("message_type", "ReadActuals");
-            new Thread() {
-                @Override
-                public void run() {
-                    sendToServer(gcm, data);
-                }
-            }.start();
+            serverReconfigure(gcm, data);
             return true;
         }
 

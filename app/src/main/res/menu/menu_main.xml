@@ -32,9 +32,4 @@
         android:orderInCategory="100"
         android:title="@string/action_configSrvGet"
         app:showAsAction="never" />
-    <item
-        android:id="@+id/action_readActuals"
-        android:orderInCategory="100"
-        android:title="@string/action_readActuals"
-        app:showAsAction="never" />
 </menu>

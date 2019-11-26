@@ -13,6 +13,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Timer;
@@ -110,21 +111,23 @@ public class GcmIntentService extends IntentService {
 				editor.putString("LastUpdatedLcl", new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").format(nowDate));
 				editor.putString("pressureVal", extras.getString("pressureVal", ""));
 
-				editor.putString("GPIO17", extras.getString("coolerGPIO", ""));
-				editor.putString("GPIO18", extras.getString("heatGPIO", ""));
-
 				editor.commit();
             }
             if (type.equals("alarma")) {
                 Notify("ALARMA", ringtone, prefs.getBoolean("notifications_new_message", true), prefs.getBoolean("notifications_new_message_vibrate", true));
 			}
-			if (type.equals("NotifyGPIO")){
+
+			if (type.equals("Notify")) {
+				Notify(extras.getString("note", null), null, true, false);
+			}
+
+			if (type.equals("NotifyWater")){
                 //Notify(extras.getString("note", null), null, true, false);
-				//System.out.println("NotifyGPIO incoming " + "GPIO" + extras.getString("GPIO", "") + extras.getString("State", ""));
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString("GPIO" + extras.getString("GPIO", ""), extras.getString("State", ""));
-                editor.commit();
-            }
+				//System.out.println("Incoming message note " + extras.getString("note", null));
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString("WaterControl", extras.getString("note", null));
+                    editor.commit();
+			}
 
 			if (type.equals("NotifyDIMMER")){
 				//Notify(extras.getString("note", null), null, true, false);
@@ -141,9 +144,8 @@ public class GcmIntentService extends IntentService {
 				editor.putBoolean("towerToggleChecked", Boolean.valueOf(extras.getString("towerToggle", null)));
 				editor.putBoolean("stillAutoChecked", Boolean.valueOf(extras.getString("stillAutoToggle", null)));
                 editor.putBoolean("towerAutoChecked", Boolean.valueOf(extras.getString("towerAutoToggle", null)));
-				editor.commit();
+                editor.commit();
 			}
-
 		} catch (Exception e) {e.printStackTrace();}
 	}
 

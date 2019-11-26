@@ -50,40 +50,70 @@
         android:text="+"
         android:textSize="30dp"/>
 
-    <CheckBox
-        android:id="@+id/gpio18"
-        android:title="@string/gpio18"
-        android:text="@string/gpio18"
+    <Button
+        android:id="@+id/btnOpen"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
         android:layout_alignStart="@+id/buttonDimDN"
-        android:layout_below="@+id/buttonDimDN" />
+        android:layout_marginTop="180dp"
+        android:enabled="false"
+        android:text="Full Open" />
 
-    <CheckBox
-        android:id="@+id/gpio17"
-        android:title="@string/gpio17"
-        android:text="@string/gpio17"
+    <Button
+        android:id="@+id/btnOAdd10"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/buttonDimDN"
-        android:layout_below="@+id/gpio18" />
+        android:layout_alignParentStart="true"
+        android:layout_alignTop="@+id/btnOpen"
+        android:layout_marginStart="120dp"
+        android:enabled="false"
+        android:text="+10%" />
 
-    <CheckBox
-        android:id="@+id/gpio27"
-        android:title="@string/gpio27"
-        android:text="@string/gpio27"
+    <Button
+        android:id="@+id/btnOAdd1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/buttonDimDN"
-        android:layout_below="@+id/gpio17" />
+        android:layout_alignParentEnd="true"
+        android:layout_alignTop="@+id/btnOpen"
+        android:layout_marginEnd="70dp"
+        android:enabled="false"
+        android:text="+1%" />
 
-    <CheckBox
-        android:id="@+id/gpio22"
-        android:title="@string/gpio22"
-        android:text="@string/gpio22"
+    <Button
+        android:id="@+id/btnClose"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
         android:layout_alignStart="@+id/buttonDimDN"
-        android:layout_below="@+id/gpio27" />
+        android:layout_marginTop="240dp"
+        android:enabled="false"
+        android:text="Full Close" />
+
+    <Button
+        android:id="@+id/btnCAdd10"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/btnOAdd10"
+        android:layout_alignTop="@+id/btnClose"
+        android:enabled="false"
+        android:text="+10%" />
+
+    <Button
+        android:id="@+id/btnCAdd1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/btnOAdd1"
+        android:layout_alignTop="@+id/btnClose"
+        android:enabled="false"
+        android:text="+1%" />
+
+    <TextView
+        android:id="@+id/waterAngle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/btnOpen"
+        android:layout_toEndOf="@+id/dimmerTextVal"
+        android:text="0" />
 
 </RelativeLayout>
