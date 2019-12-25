@@ -4,20 +4,19 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-
 import java.util.Arrays;
-
 import static org.duckdns.denis_st.tempmonitorclient.ServerConnection.serverReconfigure;
 
-public class Main2Activity extends AppCompatActivity  {
+
+public class Main2Activity extends AppCompatActivity {
     private SharedPreferences prefs;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
     private SeekBar dimmerControlBar;

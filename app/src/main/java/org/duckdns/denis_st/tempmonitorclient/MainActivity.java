@@ -3,12 +3,10 @@ package org.duckdns.denis_st.tempmonitorclient;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.View;
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.preference.PreferenceManager;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -16,13 +14,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
 import static org.duckdns.denis_st.tempmonitorclient.ServerConnection.serverReconfigure;
+
 
 public class MainActivity extends AppCompatActivity {
     private GcmRegistrar tmgcm;
@@ -109,10 +112,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setTempFix(){
-	if (toggleTower.isEnabled) {
+	if (toggleTower.isEnabled()) {
 	        TowerTempFix.setText(prefs.getString("towerTempThreshold", "0.0"));
 	}
-        if (toggleStill.isEnabled) {
+        if (toggleStill.isEnabled()) {
 		StillTempFix.setText(prefs.getString("stillTempThreshold", "0.0"));
 	}
         
