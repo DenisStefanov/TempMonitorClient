@@ -39,12 +39,9 @@
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings"
+            android:noHistory="true"
             android:screenOrientation="portrait"
-            android:parentActivityName=".MainActivity">
-            <meta-data
-                            android:name="android.support.PARENT_ACTIVITY"
-                            android:value="org.duckdns.denis_st.tempmonitorclient.MainActivity" />
-        </activity>
+            android:parentActivityName=".MainActivity"/>
 
         <service
             android:name=".RingtonePlayingService"

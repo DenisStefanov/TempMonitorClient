@@ -22,4 +22,8 @@
     <string name="pref_title_vibrate">Vibrate</string>
     <string name="title_activity_main2">TempMonitorClient</string>
     <string name="title_activity_main3">Main3Activity</string>
+    <string name="channel_name_alarm">Alarms</string>
+    <string name="channel_description_alarm">Temperature alarms</string>
+    <string name="channel_name_upd">Updates</string>
+    <string name="channel_description_upd">Regular updates</string>
 </resources>

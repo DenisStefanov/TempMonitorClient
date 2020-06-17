@@ -1,16 +1,20 @@
 package org.duckdns.denis_st.tempmonitorclient;
 
-import com.google.android.gms.gcm.GoogleCloudMessaging;
 import android.app.IntentService;
+import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
-import androidx.core.app.NotificationCompat;
+
+
+import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -30,7 +34,7 @@ public class GcmIntentService extends IntentService {
 	}
 
 	private void Notify (String msg, String ringtone, Boolean notifyMsg, Boolean vibrate){
-        sendNotification(msg);
+        sendNotification(msg, "my_channel_01");
         try {
             if (notifyMsg) {
                 if (vibrate) {
@@ -97,7 +101,8 @@ public class GcmIntentService extends IntentService {
             String ringtone = prefs.getString("notifications_new_message_ringtone", null);
             restartTimer(ringtone, delay);
 
-			//System.out.println("Incoming message type " + type);
+			System.out.println("Incoming message type " + type);
+			System.out.println("Incoming message" + extras.toString());
 
 			if (type.equals("upd") || type.equals("alarma")) {
 				Date nowDate = Calendar.getInstance().getTime();
@@ -148,22 +153,16 @@ public class GcmIntentService extends IntentService {
 		} catch (Exception e) {e.printStackTrace();}
 	}
 
-	private void sendNotification(String msg) {
-		mNotificationManager = (NotificationManager)
-				this.getSystemService(Context.NOTIFICATION_SERVICE);
+	private void sendNotification(String msg, String CHANNEL_ID) {
+		mNotificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
 
-		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-				new Intent(this, MainActivity.class), 0);
+		Notification notification = new Notification.Builder(this)
+				//.setContentTitle("TempMonitorClient")
+				.setContentText(msg)
+				.setSmallIcon(R.drawable.iconsmall)
+				.setChannelId(CHANNEL_ID)
+				.build();
 
-		NotificationCompat.Builder mBuilder =
-				new NotificationCompat.Builder(this)
-		.setSmallIcon(R.drawable.iconsmall)
-		.setContentTitle("TempMonitorClient")
-		.setStyle(new NotificationCompat.BigTextStyle()
-		.bigText(msg))
-		.setAutoCancel(true)
-		.setContentText(msg);
-		mBuilder.setContentIntent(contentIntent);
-		mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
+		mNotificationManager.notify(NOTIFICATION_ID, notification);
 	}
 }

@@ -23,6 +23,7 @@ public class Main2Activity extends AppCompatActivity {
     private TextView dimmerTextVal, waterAngle;
     private Button buttonDimUP, buttonDimDN;
     private Button btnOpen, btnClose, btnOAdd10, btnCAdd10, btnOAdd1, btnCAdd1;
+    private Button btnOpenDist, btnOpenRec;
     private GoogleCloudMessaging gcm;
 
     private void updateDIMMER() {
@@ -103,6 +104,8 @@ public class Main2Activity extends AppCompatActivity {
         btnCAdd10 = (Button) findViewById(R.id.btnCAdd10);
         btnOAdd1 = (Button) findViewById(R.id.btnOAdd1);
         btnCAdd1 = (Button) findViewById(R.id.btnCAdd1);
+        btnOpenDist = (Button) findViewById(R.id.waterAngleDist);
+        btnOpenRec = (Button) findViewById(R.id.waterAngleRec);
 
         enableButtons(true, false);
         waterAngle.setText(prefs.getString("WaterControl", "0"));
@@ -184,6 +187,27 @@ public class Main2Activity extends AppCompatActivity {
                 serverReconfigure(gcm, data);
             }
         });
+
+        btnOpenDist.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                final Bundle data = new Bundle();
+                data.putString("message_type", "WaterControl");
+                data.putString("OPEN", "DIST");
+                enableButtons(false, true);
+                serverReconfigure(gcm, data);
+            }
+        });
+
+        btnOpenRec.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                final Bundle data = new Bundle();
+                data.putString("message_type", "WaterControl");
+                data.putString("OPEN", "REC");
+                enableButtons(false, true);
+                serverReconfigure(gcm, data);
+            }
+        });
+
 
         dimmerControlBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override

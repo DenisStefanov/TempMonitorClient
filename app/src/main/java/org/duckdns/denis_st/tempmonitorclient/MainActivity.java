@@ -1,7 +1,11 @@
 package org.duckdns.denis_st.tempmonitorclient;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.Menu;
@@ -33,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private String regid = null;
     private SharedPreferences prefs;
     private SharedPreferences.OnSharedPreferenceChangeListener listener;
-
+    private NotificationManager mNotificationManager;
     private ToggleButton toggleStill, toggleTower;
     private TextView StillTempFix, TowerTempFix;
     private CheckBox toggleStillAuto, toggleTowerAuto;
@@ -153,6 +157,20 @@ public class MainActivity extends AppCompatActivity {
                 }
     }
 
+    private void createNChannel(CharSequence name, String description, String id){
+
+        int importance = NotificationManager.IMPORTANCE_LOW;
+        mNotificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationChannel mChannel = new NotificationChannel(id, name, importance);
+
+        mChannel.setDescription(description);
+        mChannel.enableLights(true);
+        mChannel.setLightColor(Color.RED);
+        mChannel.enableVibration(true);
+        mChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
+        mNotificationManager.createNotificationChannel(mChannel);
+    }
+
     @Override
     public void startActivity(Intent intent) {
         super.startActivity(intent);
@@ -168,6 +186,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        createNChannel(getString(R.string.channel_name_alarm), getString(R.string.channel_description_alarm), "my_channel_01");
+        createNChannel(getString(R.string.channel_name_upd), getString(R.string.channel_description_upd), "my_channel_02");
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         registerPreferenceListener();

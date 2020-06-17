@@ -116,4 +116,20 @@
         android:layout_toEndOf="@+id/dimmerTextVal"
         android:text="0" />
 
+    <Button
+        android:id="@+id/waterAngleDist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/btnClose"
+        android:layout_marginTop="300dp"
+        android:text="Open for Distillation" />
+
+    <Button
+        android:id="@+id/waterAngleRec"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/btnClose"
+        android:layout_marginTop="350dp"
+        android:text="Open for rectification" />
+
 </RelativeLayout>
