@@ -52,11 +52,12 @@
             android:value="@integer/google_play_services_version" />
 
         <receiver
-            android:name=".GcmBroadcastReceiver"
-            android:permission="com.google.android.c2dm.permission.SEND">
+            android:name=".GcmBroadcastReceiver">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <action android:name="org.duckdns.denis_st.tempmonitorclient.intent.RECEIVE" />
                 <category android:name="com.example.gcm" />
+                <category android:name="org.duckdns.denis_st.tempmonitorclient" />
             </intent-filter>
         </receiver>
 

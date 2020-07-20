@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void createNChannel(CharSequence name, String description, String id){
 
-        int importance = NotificationManager.IMPORTANCE_LOW;
+        int importance = NotificationManager.IMPORTANCE_HIGH;
         mNotificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
         NotificationChannel mChannel = new NotificationChannel(id, name, importance);
 

@@ -2,17 +2,14 @@ package org.duckdns.denis_st.tempmonitorclient;
 
 import android.app.IntentService;
 import android.app.Notification;
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
-
+import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
@@ -21,6 +18,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import static java.lang.System.in;
+import static org.duckdns.denis_st.tempmonitorclient.ServerConnection.serverReconfigure;
 
 public class GcmIntentService extends IntentService {
 	public static final int NOTIFICATION_ID = 1;
@@ -63,7 +63,8 @@ public class GcmIntentService extends IntentService {
 
         @Override
         public void run() {
-	        Notify("CONNECTION LOST!!!", this.ringtone, true, true);
+			Log.d("TempMonitorService", "Timer task run" );
+	    	Notify("CONNECTION LOST!!!", this.ringtone, true, true);
             }
     }
 
@@ -74,6 +75,8 @@ public class GcmIntentService extends IntentService {
         mTimer = new Timer();
         alarmTimerTask = new mTimerTask(ringtone);
         mTimer.schedule(alarmTimerTask, delay*1000);
+		Log.d("TempMonitorService", "Scheduled a timer" );
+
     }
 
 	@Override
@@ -87,10 +90,46 @@ public class GcmIntentService extends IntentService {
 			if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
 				processData(extras);
      		}
+			else {
+				processCustomData(extras);
+			}
 		}
+		else
+			Log.d("TempMonitorService", "Extras empty ");
 		// Release the wake lock provided by the WakefulBroadcastReceiver.
-		GcmBroadcastReceiver.completeWakefulIntent(intent);
+		//GcmBroadcastReceiver.completeWakefulIntent(intent);
 	}
+
+	private void processCustomData(Bundle extras){
+		GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(this);
+		try {
+			String type = extras.getString("type", null);
+			String data = extras.getString("data", null);
+			String dimval;
+			Log.d("TempMonitorService","Incoming message data: " + data);
+			Bundle commands = new Bundle();
+			for (String token : (data.split(","))){
+				Log.d("TempMonitorService","token " + token + " split " + token.split(":"));
+				String[] tok = token.split(":");
+				commands.putString(tok[0], tok[1] +':' + tok[2]);
+			}
+			Log.d("TempMonitorService","Bundle " + commands.toString() );
+
+			Log.d("TempMonitorService","Incoming message" + extras.toString());
+			if  (type != null && type.equals("NFCCtrl")) {
+
+				for (String key : commands.keySet()) {
+					final Bundle data_send = new Bundle();
+					data_send.putString("message_type", key);
+					data_send.putString(commands.getString(key).split(":")[0],
+							commands.getString(key).split(":")[1]);
+					serverReconfigure(gcm, data_send);
+				}
+			}
+		} catch (Exception e) {e.printStackTrace();}
+	}
+
+
 
 	private void processData(Bundle extras){
 		try {
@@ -101,8 +140,8 @@ public class GcmIntentService extends IntentService {
             String ringtone = prefs.getString("notifications_new_message_ringtone", null);
             restartTimer(ringtone, delay);
 
-			System.out.println("Incoming message type " + type);
-			System.out.println("Incoming message" + extras.toString());
+			Log.d("TempMonitorService", "Incoming message type " + type);
+			Log.d("TempMonitorService","Incoming message" + extras.toString());
 
 			if (type.equals("upd") || type.equals("alarma")) {
 				Date nowDate = Calendar.getInstance().getTime();
@@ -118,7 +157,11 @@ public class GcmIntentService extends IntentService {
 				editor.commit();
             }
             if (type.equals("alarma")) {
-                Notify("ALARMA", ringtone, prefs.getBoolean("notifications_new_message", true), prefs.getBoolean("notifications_new_message_vibrate", true));
+                Notify("ALARMA." +
+						" TempStill=" + extras.getString("tempStill", "0.0") +
+						" TempTower=" + extras.getString("tempTower", "0.0"),
+						ringtone, prefs.getBoolean("notifications_new_message", true),
+						prefs.getBoolean("notifications_new_message_vibrate", true));
 			}
 
 			if (type.equals("Notify")) {
